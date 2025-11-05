@@ -9,10 +9,18 @@ build/
 out/
 *.log
 
-# Environment variables
+# Environment variables - PROTECT ALL ENV FILES
 .env
+.env.*
 .env.local
+.env.development
+.env.production
+.env.test
 .env*.local
+*.env
+!.env.example
+!.env.template
+!.env.sample
 
 # IDE
 .vscode/
