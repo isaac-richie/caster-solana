@@ -6,6 +6,7 @@ import { ThirdwebProvider } from "thirdweb/react";
 import { client } from "@/app/client";
 import { ThemeProvider } from "@/components/theme-provider";
 import { AlertNotificationProvider } from "@/components/alert-notification-provider";
+import { OnboardingProvider } from "@/components/onboarding/OnboardingProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -44,7 +45,9 @@ export default function RootLayout({
           <ThirdwebProvider>
             <Providers>
               <AlertNotificationProvider>
-                {children}
+                <OnboardingProvider>
+                  {children}
+                </OnboardingProvider>
               </AlertNotificationProvider>
             </Providers>
           </ThirdwebProvider>

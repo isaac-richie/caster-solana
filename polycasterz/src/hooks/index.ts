@@ -51,6 +51,10 @@ export function useMarketFilters() {
     status: 'all',
     sortBy: 'volume',
     sortOrder: 'desc',
+    priceMin: undefined,
+    priceMax: undefined,
+    volumeMin: undefined,
+    volumeMax: undefined,
   })
 
   const updateFilter = useCallback((key: keyof MarketFilters, value: any) => {
@@ -63,6 +67,10 @@ export function useMarketFilters() {
       status: 'all',
       sortBy: 'volume',
       sortOrder: 'desc',
+      priceMin: undefined,
+      priceMax: undefined,
+      volumeMin: undefined,
+      volumeMax: undefined,
     })
   }, [])
 

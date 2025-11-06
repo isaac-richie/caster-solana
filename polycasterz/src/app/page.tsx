@@ -104,8 +104,25 @@ export default function Home() {
     return () => clearTimeout(timeoutId)
   }, [filters.category, searchTerm])
 
-  // No need for client-side filtering - backend handles search and category filtering
-  const filteredMarkets = markets
+  // Apply client-side filtering for status, price range, and volume range
+  const filteredMarkets = markets.filter(market => {
+    // Status filter
+    if (filters.status && filters.status !== 'all') {
+      if (filters.status === 'active' && !market.active) return false
+      if (filters.status === 'closed' && market.active) return false
+    }
+
+    // Price range filter (convert to cents for comparison)
+    const priceInCents = market.current_price * 100
+    if (filters.priceMin !== undefined && priceInCents < filters.priceMin * 100) return false
+    if (filters.priceMax !== undefined && priceInCents > filters.priceMax * 100) return false
+
+    // Volume range filter
+    if (filters.volumeMin !== undefined && market.volume < filters.volumeMin) return false
+    if (filters.volumeMax !== undefined && market.volume > filters.volumeMax) return false
+
+    return true
+  })
 
   // Get trending markets (highest volume)
   const trendingMarkets = [...filteredMarkets]
@@ -183,9 +200,17 @@ export default function Home() {
         sortOrder={filters.sortOrder || 'desc'}
         onSortOrderChange={(order) => updateFilter('sortOrder', order)}
         marketStats={marketStats}
+        filters={{
+          status: filters.status,
+          priceMin: filters.priceMin,
+          priceMax: filters.priceMax,
+          volumeMin: filters.volumeMin,
+          volumeMax: filters.volumeMax,
+        }}
+        onFilterChange={(key, value) => updateFilter(key as keyof typeof filters, value)}
       />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-6 lg:py-8">
         {/* Show Trending section only for "All" category */}
         {(!filters.category || filters.category === 'All') && (
           <motion.section
@@ -194,13 +219,13 @@ export default function Home() {
             transition={{ duration: 0.5, delay: 0.1 }}
             className="mb-12"
           >
-            <div className="flex items-center space-x-2 mb-6">
-              <Flame className="w-6 h-6 text-orange-500" />
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Trending Markets</h2>
+            <div className="flex items-center space-x-2 mb-4 sm:mb-6">
+              <Flame className="w-5 h-5 sm:w-6 sm:h-6 text-orange-500" />
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">Trending Markets</h2>
               <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700"></div>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {trendingMarkets.map((market) => (
                 <MarketCard
                   key={market.id}

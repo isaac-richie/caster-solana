@@ -6,7 +6,9 @@ import { polymarketService } from './services/polymarket'
 import { aiEngineService } from './services/ai-engine'
 import { databaseService } from './services/database'
 import { alertCheckerService } from './services/alert-checker'
+import { emailService } from './services/email'
 import { Market, Signal, User, AIAnalysisRequest, WatchlistItem, PriceAlert } from './types'
+import { randomUUID } from 'crypto'
 
 dotenv.config()
 
@@ -587,6 +589,115 @@ app.get('/users/:walletAddress/signals', async (req, res) => {
     res.status(500).json({ 
       success: false,
       error: 'Failed to fetch user signals' 
+    })
+  }
+})
+
+// Update user email
+app.patch('/users/:walletAddress/email', async (req, res) => {
+  try {
+    const { walletAddress } = req.params
+    const { email } = req.body
+
+    if (!email || !email.includes('@')) {
+      return res.status(400).json({ 
+        success: false,
+        error: 'Valid email address is required' 
+      })
+    }
+
+    // Get or create user
+    let user = await databaseService.getUserByWallet(walletAddress)
+    if (!user) {
+      user = await databaseService.createUser({ wallet_address: walletAddress })
+      if (!user) {
+        return res.status(500).json({ 
+          success: false,
+          error: 'Failed to create user' 
+        })
+      }
+    }
+
+    // Generate verification token
+    const verificationToken = randomUUID()
+
+    // Update user with email (unverified)
+    const updatedUser = await databaseService.updateUser(walletAddress, {
+      email,
+      email_verified: false,
+      email_verification_token: verificationToken,
+    })
+
+    if (!updatedUser) {
+      return res.status(500).json({ 
+        success: false,
+        error: 'Failed to update user email' 
+      })
+    }
+
+    // Send verification email
+    const emailSent = await emailService.sendVerificationEmail(email, verificationToken)
+
+    res.json({ 
+      success: true, 
+      user: updatedUser,
+      emailSent,
+      message: 'Email updated. Please check your inbox to verify your email address.'
+    })
+  } catch (error) {
+    console.error('Email update error:', error)
+    res.status(500).json({ 
+      success: false,
+      error: 'Failed to update email' 
+    })
+  }
+})
+
+// Verify email
+app.get('/users/verify-email', async (req, res) => {
+  try {
+    const { token } = req.query
+
+    if (!token || typeof token !== 'string') {
+      return res.status(400).json({ 
+        success: false,
+        error: 'Verification token is required' 
+      })
+    }
+
+    // Find user by verification token
+    const user = await databaseService.getUserByEmailVerificationToken(token)
+    
+    if (!user) {
+      return res.status(400).json({ 
+        success: false,
+        error: 'Invalid or expired verification token' 
+      })
+    }
+
+    // Verify email
+    const updatedUser = await databaseService.updateUser(user.wallet_address, {
+      email_verified: true,
+      email_verification_token: null, // Clear token after verification
+    })
+
+    if (!updatedUser) {
+      return res.status(500).json({ 
+        success: false,
+        error: 'Failed to verify email' 
+      })
+    }
+
+    res.json({ 
+      success: true, 
+      user: updatedUser,
+      message: 'Email verified successfully! You will now receive email notifications for price alerts.'
+    })
+  } catch (error) {
+    console.error('Email verification error:', error)
+    res.status(500).json({ 
+      success: false,
+      error: 'Failed to verify email' 
     })
   }
 })

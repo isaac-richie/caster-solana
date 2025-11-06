@@ -38,6 +38,9 @@ export interface Signal {
 export interface User {
   id: string
   wallet_address: string
+  email?: string
+  email_verified?: boolean
+  email_verification_token?: string
   created_at: string
   updated_at: string
   is_active: boolean

@@ -183,6 +183,7 @@ export function MarketCard({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
+      data-onboarding="market-card"
       className={cn("polymarket-card-gradient polymarket-hover-lift polymarket-shadow-lg rounded-lg border border-gray-200 dark:border-gray-700", className)}
     >
       <Card className="border-0 shadow-none bg-transparent">
@@ -343,38 +344,39 @@ export function MarketCard({
           )}
 
           {/* Action Buttons */}
-          <div className="flex items-center justify-between gap-2">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2">
             {/* Main Action Buttons */}
             <div className="flex gap-2 flex-1">
               <Button
                 onClick={handleAnalyze}
                 disabled={!market.active || isAnalyzing}
-                className="polycaster-gradient hover:opacity-90 disabled:bg-gray-400 text-white py-3 px-4 rounded-lg transition-all duration-200 font-semibold shadow-md hover:shadow-lg disabled:cursor-not-allowed flex items-center justify-center space-x-1 flex-1"
+                data-onboarding="ai-analysis"
+                className="polycaster-gradient hover:opacity-90 disabled:bg-gray-400 text-white py-2 sm:py-3 px-3 sm:px-4 rounded-lg transition-all duration-200 font-semibold shadow-md hover:shadow-lg disabled:cursor-not-allowed flex items-center justify-center space-x-1 flex-1 text-xs sm:text-sm"
               >
-                <Target className="w-4 h-4" />
-                <span className="text-xs">AI</span>
+                <Target className="w-3 h-3 sm:w-4 sm:h-4" />
+                <span>AI</span>
               </Button>
               
               <Button
                 onClick={() => setShowROICalculator(true)}
                 variant="outline"
-                className="border-2 border-green-500 text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 py-3 px-4 rounded-lg transition-all duration-200 font-semibold shadow-sm hover:shadow-md flex items-center justify-center space-x-1 flex-1"
+                className="border-2 border-green-500 text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 py-2 sm:py-3 px-3 sm:px-4 rounded-lg transition-all duration-200 font-semibold shadow-sm hover:shadow-md flex items-center justify-center space-x-1 flex-1 text-xs sm:text-sm"
               >
-                <Calculator className="w-4 h-4" />
-                <span className="text-xs">ROI</span>
+                <Calculator className="w-3 h-3 sm:w-4 sm:h-4" />
+                <span>ROI</span>
               </Button>
             </div>
 
             {/* Icon-Only Buttons */}
-            <div className="flex gap-2">
+            <div className="flex gap-2 justify-center sm:justify-end">
               <Button
                 onClick={() => setShowAlertDialog(true)}
                 variant="ghost"
                 size="icon"
-                className="text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/20 rounded-lg transition-all duration-200"
+                className="text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/20 rounded-lg transition-all duration-200 min-w-[44px] min-h-[44px]"
                 title="Set Price Alert"
               >
-                <Bell className="w-5 h-5" />
+                <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
               </Button>
 
               <Button
@@ -383,14 +385,14 @@ export function MarketCard({
                 variant="ghost"
                 size="icon"
                 className={cn(
-                  "rounded-lg transition-all duration-200",
+                  "rounded-lg transition-all duration-200 min-w-[44px] min-h-[44px]",
                   inWatchlist
                     ? "text-yellow-600 dark:text-yellow-400 hover:bg-yellow-50 dark:hover:bg-yellow-900/20"
                     : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800"
                 )}
                 title={inWatchlist ? "Remove from Watchlist" : "Add to Watchlist"}
               >
-                <Star className={cn("w-5 h-5", inWatchlist && "fill-yellow-500")} />
+                <Star className={cn("w-4 h-4 sm:w-5 sm:h-5", inWatchlist && "fill-yellow-500")} />
               </Button>
             </div>
           </div>
@@ -400,10 +402,10 @@ export function MarketCard({
             <Button
               onClick={() => setShowMarketDetails(true)}
               variant="outline"
-              className="w-full border-2 border-blue-500 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 py-3 rounded-lg transition-all duration-200 font-semibold shadow-sm hover:shadow-md flex items-center justify-center space-x-2"
+              className="w-full border-2 border-blue-500 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 py-2 sm:py-3 rounded-lg transition-all duration-200 font-semibold shadow-sm hover:shadow-md flex items-center justify-center space-x-2 text-xs sm:text-sm"
             >
-              <ExternalLink className="w-5 h-5" />
-              <span className="text-sm">View Market Details</span>
+              <ExternalLink className="w-4 h-4 sm:w-5 sm:h-5" />
+              <span>View Market Details</span>
             </Button>
           )}
           

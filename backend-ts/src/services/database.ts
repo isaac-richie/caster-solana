@@ -77,6 +77,31 @@ export class DatabaseService {
     }
   }
 
+  async getUserByEmailVerificationToken(token: string): Promise<User | null> {
+    if (!this.supabase) {
+      console.warn('Supabase not available - cannot find user by token')
+      return null
+    }
+
+    try {
+      const { data, error } = await this.supabase
+        .from('users')
+        .select('*')
+        .eq('email_verification_token', token)
+        .maybeSingle()
+
+      if (error) {
+        console.error('Error fetching user by token:', error)
+        return null
+      }
+
+      return data as User | null
+    } catch (error) {
+      console.error('Database error fetching user by token:', error)
+      return null
+    }
+  }
+
   async updateUser(walletAddress: string, updates: Partial<User>): Promise<User | null> {
     if (!this.supabase) {
       console.warn('Supabase not available - cannot update user')

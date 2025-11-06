@@ -1,5 +1,6 @@
 import { databaseService } from './database'
 import { polymarketService } from './polymarket'
+import { emailService } from './email'
 import { PriceAlert } from '../types'
 
 export class AlertCheckerService {
@@ -154,29 +155,54 @@ export class AlertCheckerService {
     }
   }
 
-  // Send notification to user (placeholder for now)
+  // Send notification to user
   private async sendNotification(alert: PriceAlert, currentPrice: number) {
-    // For now, just log. Later we'll add:
-    // - Browser push notifications
-    // - Email notifications
-    // - Webhook notifications
+    try {
+      // Get user email from database
+      const user = await databaseService.getUserByWallet(alert.user_wallet)
+      
+      if (!user) {
+        console.warn(`User not found for wallet ${alert.user_wallet} - cannot send email`)
+        return
+      }
 
-    const message = `
-🔔 Price Alert Triggered!
+      // Check if user has email and it's verified
+      if (!user.email) {
+        console.log(`User ${alert.user_wallet} has no email - skipping email notification`)
+        return
+      }
 
-Market: ${alert.market_question}
-Target Price: ${(alert.target_price * 100).toFixed(1)}¢ (${alert.condition})
-Current Price: ${(currentPrice * 100).toFixed(1)}¢
+      if (!user.email_verified) {
+        console.log(`User ${alert.user_wallet} email not verified - skipping email notification`)
+        return
+      }
 
-Your alert has been triggered!
-    `
+      // Send email notification
+      const emailSent = await emailService.sendPriceAlert(
+        user.email,
+        {
+          marketQuestion: alert.market_question,
+          targetPrice: alert.target_price,
+          currentPrice: currentPrice,
+          condition: alert.condition,
+          marketId: alert.market_id,
+        }
+      )
 
-    console.log(message)
+      if (emailSent) {
+        console.log(`✅ Email notification sent to ${user.email}`)
+      } else {
+        console.warn(`⚠️  Failed to send email notification to ${user.email}`)
+      }
 
-    // TODO: Implement actual notification sending
-    // - Browser push: Use Web Push API
-    // - Email: Use SendGrid/Resend
-    // - Webhook: POST to user's webhook URL
+      // TODO: Add other notification methods:
+      // - Browser push: Use Web Push API
+      // - SMS/WhatsApp: Use Twilio/WhatsApp Business API
+      // - Webhook: POST to user's webhook URL
+
+    } catch (error) {
+      console.error('Error sending notification:', error)
+    }
   }
 
   // Get service status

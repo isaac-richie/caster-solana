@@ -61,6 +61,10 @@ export interface MarketFilters {
   status?: 'active' | 'closed' | 'all'
   sortBy?: 'volume' | 'price' | 'trend' | 'date'
   sortOrder?: 'asc' | 'desc'
+  priceMin?: number
+  priceMax?: number
+  volumeMin?: number
+  volumeMax?: number
 }
 
 export interface MarketStats {

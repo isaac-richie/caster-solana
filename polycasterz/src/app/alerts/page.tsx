@@ -8,12 +8,14 @@ import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useAlerts } from '@/hooks/useAlerts'
 import { useActiveAccount } from 'thirdweb/react'
-import { Bell, Loader2, Trash2, TrendingUp, TrendingDown, Target } from 'lucide-react'
+import { Bell, Loader2, Trash2, TrendingUp, TrendingDown, Target, Mail } from 'lucide-react'
+import { EmailSettings } from '@/components/user/EmailSettings'
 import { formatPrice } from '@/lib/utils'
 import Link from 'next/link'
 
 export default function AlertsPage() {
   const [activeTab, setActiveTab] = useState<'active' | 'triggered' | 'cancelled'>('active')
+  const [showEmailSettings, setShowEmailSettings] = useState(false)
   const { alerts, loading, error, deleteAlert, refetch } = useAlerts(activeTab)
   const account = useActiveAccount()
 
@@ -90,20 +92,30 @@ export default function AlertsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 sm:p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-2">
-            <h1 className="text-4xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
-              <Bell className="w-10 h-10 text-orange-500" />
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white flex items-center gap-2 sm:gap-3">
+              <Bell className="w-6 h-6 sm:w-8 sm:h-8 lg:w-10 lg:h-10 text-orange-500" />
               Your Price Alerts
             </h1>
-            <Link href="/">
-              <Button variant="outline">
-                Back to Markets
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setShowEmailSettings(true)}
+                className="flex items-center gap-2"
+              >
+                <Mail className="w-4 h-4" />
+                <span className="hidden sm:inline">Email Settings</span>
               </Button>
-            </Link>
+              <Link href="/">
+                <Button variant="outline">
+                  Back to Markets
+                </Button>
+              </Link>
+            </div>
           </div>
           <p className="text-gray-600 dark:text-gray-400">
             Manage your market price alerts
@@ -234,6 +246,12 @@ export default function AlertsPage() {
           </div>
         )}
       </div>
+
+      {/* Email Settings Modal */}
+      <EmailSettings
+        isOpen={showEmailSettings}
+        onClose={() => setShowEmailSettings(false)}
+      />
     </div>
   )
 }
