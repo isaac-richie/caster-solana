@@ -8,7 +8,7 @@ export const config = {
 
   // Thirdweb Configuration
   THIRDWEB_SECRET_KEY: process.env.THIRDWEB_SECRET_KEY || '',
-  SERVER_WALLET_ADDRESS: process.env.SERVER_WALLET_ADDRESS || '0xc94ed0699531695452EC82A9b457F9d2E9aEa4f9',
+  SERVER_WALLET_ADDRESS: process.env.SERVER_WALLET_ADDRESS || '0x2983D066D42a79295dFAC0F752EA2FA7940C33dA',
 
   // Supabase Configuration
   SUPABASE_URL: process.env.SUPABASE_URL || 'https://jejfuksuzmsvqmgweopi.supabase.co',

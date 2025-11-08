@@ -16,7 +16,35 @@ const app = express()
 const PORT = process.env.PORT || 8000
 
 // Middleware
-app.use(cors())
+// CORS configuration - allow frontend and localhost for development
+const allowedOrigins = [
+  process.env.FRONTEND_URL,
+  'http://localhost:3000',
+  'http://localhost:3001',
+].filter(Boolean) // Remove undefined values
+
+app.use(cors({
+  origin: function (origin, callback) {
+    // Allow requests with no origin (mobile apps, Postman, curl, etc.)
+    if (!origin) return callback(null, true)
+    
+    if (allowedOrigins.length === 0 || allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true)
+    } else {
+      console.warn(`⚠️  CORS blocked origin: ${origin}`)
+      callback(new Error('Not allowed by CORS'))
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}))
+
+if (process.env.NODE_ENV === 'production' && allowedOrigins.length === 0) {
+  console.warn('⚠️  WARNING: FRONTEND_URL not set - CORS allows all origins (INSECURE)')
+  console.warn('⚠️  Set FRONTEND_URL in environment variables for production')
+}
+
 app.use(express.json())
 
 // Health check endpoint
@@ -1044,12 +1072,13 @@ app.use('*', (req, res) => {
 
 // Start server
 app.listen(PORT, () => {
+  const baseUrl = process.env.FRONTEND_URL || `http://localhost:${PORT}`
   console.log(`🚀 PolyCaster TypeScript backend running on port ${PORT}`)
-  console.log(`📊 Health check: http://localhost:${PORT}/health`)
-  console.log(`💳 Facilitator: http://localhost:${PORT}/api/payment/settle`)
-  console.log(`📈 Markets: http://localhost:${PORT}/markets`)
-  console.log(`🤖 AI Analysis: http://localhost:${PORT}/ai/analyze/:marketId`)
-  console.log(`🔔 Alerts: http://localhost:${PORT}/alerts`)
+  console.log(`📊 Health check: ${baseUrl}/health`)
+  console.log(`💳 Facilitator: ${baseUrl}/api/payment/settle`)
+  console.log(`📈 Markets: ${baseUrl}/markets`)
+  console.log(`🤖 AI Analysis: ${baseUrl}/ai/analyze/:marketId`)
+  console.log(`🔔 Alerts: ${baseUrl}/alerts`)
   
   // Start alert checker service
   alertCheckerService.start()
