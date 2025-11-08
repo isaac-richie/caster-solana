@@ -90,6 +90,18 @@ export interface MarketAnalysis {
   riskLevel: 'LOW' | 'MEDIUM' | 'HIGH'
   reasoning: string[]
   createdAt: string
+  // Premium $100 analysis fields
+  executiveSummary?: string
+  marketContext?: string
+  fundamentalAnalysis?: string
+  technicalAnalysis?: string
+  marketMicrostructure?: string
+  keyFactors?: string[]
+  riskAssessment?: string
+  opportunityAnalysis?: string
+  priceAnalysis?: string
+  competitiveAnalysis?: string
+  actionPlan?: string
 }
 
 // Watchlist types

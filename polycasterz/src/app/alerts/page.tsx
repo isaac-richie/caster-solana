@@ -5,12 +5,12 @@ import { motion } from 'framer-motion'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useAlerts } from '@/hooks/useAlerts'
 import { useActiveAccount } from 'thirdweb/react'
-import { Bell, Loader2, Trash2, TrendingUp, TrendingDown, Target, Mail } from 'lucide-react'
+import { useAlertNotifications } from '@/hooks/useAlertNotifications'
+import { Bell, Loader2, Trash2, TrendingUp, TrendingDown, Target, Mail, RefreshCw, CheckCircle2, XCircle } from 'lucide-react'
 import { EmailSettings } from '@/components/user/EmailSettings'
-import { formatPrice } from '@/lib/utils'
 import Link from 'next/link'
 
 export default function AlertsPage() {
@@ -18,12 +18,25 @@ export default function AlertsPage() {
   const [showEmailSettings, setShowEmailSettings] = useState(false)
   const { alerts, loading, error, deleteAlert, refetch } = useAlerts(activeTab)
   const account = useActiveAccount()
+  const { markAllAsSeen } = useAlertNotifications()
 
+  // Only refetch when tab changes (not on every mount)
   useEffect(() => {
     if (account) {
       refetch()
     }
-  }, [account, refetch, activeTab])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab]) // Only refetch when tab changes, not on account change
+
+  // Mark all alerts as seen when user visits alerts page
+  useEffect(() => {
+    if (account && activeTab === 'triggered') {
+      // Small delay to ensure alerts are loaded
+      setTimeout(() => {
+        markAllAsSeen()
+      }, 1000)
+    }
+  }, [account, activeTab, markAllAsSeen])
 
   if (!account) {
     return (
@@ -101,21 +114,31 @@ export default function AlertsPage() {
               <Bell className="w-6 h-6 sm:w-8 sm:h-8 lg:w-10 lg:h-10 text-orange-500" />
               Your Price Alerts
             </h1>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                onClick={() => setShowEmailSettings(true)}
-                className="flex items-center gap-2"
-              >
-                <Mail className="w-4 h-4" />
-                <span className="hidden sm:inline">Email Settings</span>
-              </Button>
-              <Link href="/">
-                <Button variant="outline">
-                  Back to Markets
-                </Button>
-              </Link>
-            </div>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        onClick={() => refetch()}
+                        disabled={loading}
+                        className="flex items-center gap-2"
+                        title="Refresh alerts"
+                      >
+                        <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+                        <span className="hidden sm:inline">Refresh</span>
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => setShowEmailSettings(true)}
+                        className="flex items-center gap-2"
+                      >
+                        <Mail className="w-4 h-4" />
+                        <span className="hidden sm:inline">Email Settings</span>
+                      </Button>
+                      <Link href="/">
+                        <Button variant="outline">
+                          Back to Markets
+                        </Button>
+                      </Link>
+                    </div>
           </div>
           <p className="text-gray-600 dark:text-gray-400">
             Manage your market price alerts
@@ -123,7 +146,7 @@ export default function AlertsPage() {
         </div>
 
         {/* Tabs */}
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="mb-6">
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'active' | 'triggered' | 'cancelled')} className="mb-6">
           <TabsList className="grid w-full grid-cols-3 max-w-md">
             <TabsTrigger value="active">Active</TabsTrigger>
             <TabsTrigger value="triggered">Triggered</TabsTrigger>
@@ -165,7 +188,7 @@ export default function AlertsPage() {
 
         {/* Alerts Grid */}
         {!error && alerts.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {alerts.map((alert, index) => (
               <motion.div
                 key={alert.id}
@@ -174,9 +197,9 @@ export default function AlertsPage() {
                 transition={{ delay: index * 0.05 }}
               >
                 <Card className="polymarket-card-gradient hover:shadow-xl transition-all duration-300 h-full">
-                  <CardHeader className="pb-3">
+                  <CardHeader className="pb-2 px-4 pt-4">
                     <div className="flex items-start justify-between gap-2">
-                      <CardTitle className="text-lg font-bold text-gray-900 dark:text-white line-clamp-2 flex-1">
+                      <CardTitle className="text-base font-semibold text-gray-900 dark:text-white line-clamp-2 flex-1">
                         {alert.market_question}
                       </CardTitle>
                       {activeTab === 'active' && (
@@ -195,47 +218,47 @@ export default function AlertsPage() {
                       )}
                     </div>
                   </CardHeader>
-                  <CardContent className="space-y-4">
+                  <CardContent className="space-y-3 px-4 pb-4">
                     {/* Alert Details */}
-                    <div className="p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-200 dark:border-orange-800">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-xs text-orange-700 dark:text-orange-300">Alert Condition</span>
+                    <div className="p-2.5 bg-orange-50 dark:bg-orange-900/20 rounded-md border border-orange-200 dark:border-orange-800">
+                      <div className="flex items-center justify-between mb-1.5">
+                        <span className="text-[10px] text-orange-700 dark:text-orange-300">Alert Condition</span>
                         {getStatusBadge(alert.status)}
                       </div>
-                      <div className={`flex items-center gap-2 text-lg font-bold ${getConditionColor(alert.condition)}`}>
+                      <div className={`flex items-center gap-1.5 text-sm font-bold ${getConditionColor(alert.condition)}`}>
                         {getConditionIcon(alert.condition)}
                         <span className="capitalize">{alert.condition}</span>
-                        <span className="text-xl">{(alert.target_price * 100).toFixed(0)}¢</span>
+                        <span className="text-base">{(alert.target_price * 100).toFixed(0)}¢</span>
                       </div>
                     </div>
 
                     {/* Notes */}
                     {alert.notes && (
-                      <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-200 dark:border-blue-800">
-                        <p className="text-sm text-blue-900 dark:text-blue-100">
+                      <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-md border border-blue-200 dark:border-blue-800">
+                        <p className="text-xs text-blue-900 dark:text-blue-100 leading-relaxed">
                           📝 {alert.notes}
                         </p>
                       </div>
                     )}
 
                     {/* Timestamp */}
-                    <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+                    <div className="flex items-center justify-between text-[10px] text-gray-500 dark:text-gray-400">
                       <span>
                         {alert.status === 'triggered' && alert.triggered_at
                           ? `Triggered ${new Date(alert.triggered_at).toLocaleDateString()}`
                           : `Created ${new Date(alert.created_at).toLocaleDateString()}`}
                       </span>
                       {alert.status === 'triggered' && (
-                        <CheckCircle2 className="w-4 h-4 text-green-500" />
+                        <CheckCircle2 className="w-3.5 h-3.5 text-green-500" />
                       )}
                       {alert.status === 'cancelled' && (
-                        <XCircle className="w-4 h-4 text-gray-500" />
+                        <XCircle className="w-3.5 h-3.5 text-gray-500" />
                       )}
                     </div>
 
                     {/* Action */}
                     <Link href={`/?market=${alert.market_id}`} className="block">
-                      <Button variant="outline" className="w-full" size="sm">
+                      <Button variant="outline" className="w-full py-1.5 text-xs" size="sm">
                         View Market
                       </Button>
                     </Link>

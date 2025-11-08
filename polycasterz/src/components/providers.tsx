@@ -10,8 +10,11 @@ export function Providers({ children }: { children: React.ReactNode }) {
       new QueryClient({
         defaultOptions: {
           queries: {
-            staleTime: 60 * 1000, // 1 minute
-            refetchOnWindowFocus: false,
+            staleTime: 5 * 60 * 1000, // 5 minutes - data is fresh for 5 minutes
+            gcTime: 10 * 60 * 1000, // 10 minutes - keep in cache for 10 minutes (formerly cacheTime)
+            refetchOnWindowFocus: false, // Don't refetch when window regains focus
+            refetchOnMount: false, // Don't refetch when component mounts (if data is fresh)
+            refetchOnReconnect: false, // Don't refetch on reconnect
           },
         },
       })

@@ -5,104 +5,160 @@ import { motion } from 'framer-motion'
 import { MarketHeader } from '@/components/market/MarketHeader'
 import { MarketCard } from '@/components/market/MarketCard'
 import { AIAnalysisModal } from '@/components/ai/AIAnalysisModal'
-import { useMarkets, useMarketFilters } from '@/hooks'
+import { Button } from '@/components/ui/button'
+import { HeroSection, WhatIsSection, UseCasesSection } from '@/components/landing'
+import { useMarketFilters } from '@/hooks'
 import { Market } from '@/types'
-import { 
-  formatPrice, 
-  formatVolume, 
-  formatLiquidity, 
-  formatTimeRemaining,
-  cn
-} from '@/lib/utils'
 import { 
   TrendingUp, 
   Flame, 
   CircleDot, 
   Target,
-  Loader2
+  Loader2,
+  RefreshCw
 } from 'lucide-react'
 import { normalizeCategory } from '@/lib/categories'
+
+const LANDING_SKIPPED_KEY = 'polycaster_landing_skipped'
 
 export default function Home() {
   const [searchTerm, setSearchTerm] = useState('')
   const [markets, setMarkets] = useState<Market[]>([])
+  const [recentMarkets, setRecentMarkets] = useState<Market[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [selectedMarket, setSelectedMarket] = useState<Market | null>(null)
   const [isAnalysisModalOpen, setIsAnalysisModalOpen] = useState(false)
+  const [lastFetchKey, setLastFetchKey] = useState<string>('')
+  const [showLanding, setShowLanding] = useState(false)
 
   const { filters, updateFilter } = useMarketFilters()
 
-  // Fetch markets data (category-aware)
+  // Check if landing should be shown (first-time visitors)
   useEffect(() => {
-    const fetchMarkets = async () => {
-      setLoading(true)
-      setError(null)
-      try {
-        const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
-        let url
-        
-        // If there's a search term, use search API
-        if (searchTerm && searchTerm.trim().length > 0) {
-          url = `${API_URL}/markets/search?q=${encodeURIComponent(searchTerm)}&limit=50`
-          console.log(`Searching markets for: "${searchTerm}"`)
-        } else {
-          // Otherwise fetch by category
-          const isAll = !filters.category || filters.category === 'All'
-          const limit = isAll ? 50 : 100
-          url = isAll
-            ? `${API_URL}/markets?limit=${limit}`
-            : `${API_URL}/markets/category/${encodeURIComponent(normalizeCategory(filters.category))}?limit=${limit}`
-          console.log(`Fetching markets from: ${url}`)
+    if (typeof window !== 'undefined') {
+      const skipped = localStorage.getItem(LANDING_SKIPPED_KEY)
+      setShowLanding(!skipped)
+    }
+  }, [])
+
+  const handleSkipLanding = () => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(LANDING_SKIPPED_KEY, 'true')
+      setShowLanding(false)
+      // Smooth scroll to markets
+      setTimeout(() => {
+        const marketsSection = document.getElementById('markets')
+        if (marketsSection) {
+          marketsSection.scrollIntoView({ behavior: 'smooth' })
         }
+      }, 100)
+    }
+  }
 
-        const response = await fetch(url, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        })
-        
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`)
-        }
-        
-        const data = await response.json()
-        let fetched = data.markets || []
+  // Fetch markets function (reusable)
+  const fetchMarkets = async (force = false) => {
+    const fetchKey = `${searchTerm}-${filters.category}`
+    
+    // Don't refetch if data is fresh and not forcing
+    if (!force && fetchKey === lastFetchKey && markets.length > 0) {
+      return
+    }
 
-        console.log(`Fetched ${fetched.length} markets`)
-
-        // Fallback: if category endpoint returns empty and not searching, fetch all markets
-        if (!searchTerm && (!filters.category || filters.category !== 'All') && fetched.length === 0) {
-          console.log('No markets found for category, fetching all markets as fallback')
-          const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
-          const allRes = await fetch(`${API_URL}/markets?limit=50`, {
+    setLoading(true)
+    setError(null)
+    try {
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+      let url
+      
+      // If there's a search term, use search API
+      if (searchTerm && searchTerm.trim().length > 0) {
+        url = `${API_URL}/markets/search?q=${encodeURIComponent(searchTerm)}&limit=50`
+        console.log(`Searching markets for: "${searchTerm}"`)
+      } else {
+        // Otherwise fetch by category
+        const isAll = !filters.category || filters.category === 'All'
+        const limit = isAll ? 100 : 150
+        url = isAll
+          ? `${API_URL}/markets?limit=${limit}`
+          : `${API_URL}/markets/category/${encodeURIComponent(normalizeCategory(filters.category))}?limit=${limit}`
+        console.log(`Fetching markets from: ${url}`)
+      }
+      
+      // Also fetch recent markets separately for "Live Markets" section
+      if (!searchTerm || searchTerm.trim().length === 0) {
+        const recentUrl = `${API_URL}/markets/recent?limit=24`
+        try {
+          const recentResponse = await fetch(recentUrl, {
             method: 'GET',
             headers: {
               'Content-Type': 'application/json',
             },
           })
-          const allData = await allRes.json()
-          fetched = allData.markets || []
+          if (recentResponse.ok) {
+            const recentData = await recentResponse.json()
+            setRecentMarkets(recentData.markets || [])
+            console.log(`Fetched ${recentData.markets?.length || 0} recent markets`)
+          }
+        } catch (err) {
+          console.warn('Failed to fetch recent markets:', err)
         }
-
-        setMarkets(fetched)
-      } catch (error) {
-        console.error('Backend error:', error)
-        setError('Failed to load markets')
-        setMarkets([])
-      } finally {
-        setLoading(false)
+      } else {
+        // Clear recent markets when searching
+        setRecentMarkets([])
       }
-    }
 
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      
+      const data = await response.json()
+      let fetched = data.markets || []
+
+      console.log(`Fetched ${fetched.length} markets`)
+
+      // Fallback: if category endpoint returns empty and not searching, fetch all markets
+      if (!searchTerm && (!filters.category || filters.category !== 'All') && fetched.length === 0) {
+        console.log('No markets found for category, fetching all markets as fallback')
+        const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+        const allRes = await fetch(`${API_URL}/markets?limit=50`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        })
+        const allData = await allRes.json()
+        fetched = allData.markets || []
+      }
+
+      setMarkets(fetched)
+      setLastFetchKey(fetchKey)
+    } catch (error) {
+      console.error('Backend error:', error)
+      setError('Failed to load markets')
+      setMarkets([])
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Fetch markets data (only when search/category changes, not on every mount)
+  useEffect(() => {
     // Debounce search to avoid too many API calls
     const timeoutId = setTimeout(() => {
-      fetchMarkets()
+      fetchMarkets(false) // false = don't force, use cache if available
     }, searchTerm ? 500 : 0) // 500ms delay for search, immediate for category change
 
     return () => clearTimeout(timeoutId)
-  }, [filters.category, searchTerm])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters.category, searchTerm]) // Only refetch when search or category changes
 
   // Apply client-side filtering for status, price range, and volume range
   const filteredMarkets = markets.filter(market => {
@@ -129,20 +185,21 @@ export default function Home() {
     .sort((a, b) => b.volume - a.volume)
     .slice(0, 6)
 
-  // Get live markets (active and recent) - sorted by most recently updated
-  const liveMarkets = filteredMarkets
-    .filter(market => market.active && !market.closed)
-    .sort((a, b) => {
-      const dateA = new Date(a.updated_at || a.created_at || 0).getTime()
-      const dateB = new Date(b.updated_at || b.created_at || 0).getTime()
-      return dateB - dateA
-    })
-    .slice(0, 8)
+  // Get live markets - use recent markets if available, otherwise filter from all markets
+  const liveMarkets = recentMarkets.length > 0 
+    ? recentMarkets.slice(0, 24)
+    : filteredMarkets
+        .filter(market => market.active && !market.closed)
+        .sort((a, b) => {
+          const dateA = new Date(a.updated_at || a.created_at || 0).getTime()
+          const dateB = new Date(b.updated_at || b.created_at || 0).getTime()
+          return dateB - dateA
+        })
+        .slice(0, 24)
 
   // Calculate market stats
   const marketStats = {
     totalMarkets: markets.length,
-    totalVolume: markets.reduce((sum, market) => sum + market.volume, 0),
     activeMarkets: markets.filter(market => market.active).length,
     trendingMarkets: trendingMarkets.length
   }
@@ -189,28 +246,45 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      {/* Landing Page Sections - Only show for first-time visitors */}
+      {showLanding && (
+        <>
+          <HeroSection onSkip={handleSkipLanding} />
+          <WhatIsSection />
+          <UseCasesSection />
+        </>
+      )}
+
+      {/* Refresh Button - Sticky at top */}
+      <div className="sticky top-0 z-50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700">
+        <div className="max-w-7xl mx-auto px-4 py-2 flex justify-end">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => fetchMarkets(true)}
+            disabled={loading}
+            className="flex items-center gap-2"
+            title="Refresh markets"
+          >
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            <span className="hidden sm:inline">Refresh</span>
+          </Button>
+        </div>
+      </div>
       {/* Header */}
       <MarketHeader
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
         selectedCategory={filters.category || 'All'}
         onCategoryChange={(category) => updateFilter('category', category)}
-        sortBy={filters.sortBy || 'volume'}
+        sortBy={filters.sortBy || 'price'}
         onSortChange={(sort) => updateFilter('sortBy', sort)}
         sortOrder={filters.sortOrder || 'desc'}
         onSortOrderChange={(order) => updateFilter('sortOrder', order)}
         marketStats={marketStats}
-        filters={{
-          status: filters.status,
-          priceMin: filters.priceMin,
-          priceMax: filters.priceMax,
-          volumeMin: filters.volumeMin,
-          volumeMax: filters.volumeMax,
-        }}
-        onFilterChange={(key, value) => updateFilter(key as keyof typeof filters, value)}
       />
 
-      <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-6 lg:py-8">
+      <div id="markets" className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-6 lg:py-8">
         {/* Show Trending section only for "All" category */}
         {(!filters.category || filters.category === 'All') && (
           <motion.section
@@ -225,7 +299,7 @@ export default function Home() {
               <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700"></div>
             </div>
             
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
               {trendingMarkets.map((market) => (
                 <MarketCard
                   key={market.id}
@@ -255,7 +329,7 @@ export default function Home() {
               </span>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {liveMarkets.map((market) => (
                 <MarketCard
                   key={market.id}
@@ -299,7 +373,7 @@ export default function Home() {
                 </p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {filteredMarkets.map((market) => (
                   <MarketCard
                     key={market.id}

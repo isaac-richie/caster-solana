@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { useWatchlist } from '@/hooks/useWatchlist'
 import { useActiveAccount } from 'thirdweb/react'
-import { Star, Loader2, Trash2, ExternalLink, TrendingUp, TrendingDown } from 'lucide-react'
+import { Star, Loader2, Trash2, ExternalLink, TrendingUp, TrendingDown, RefreshCw } from 'lucide-react'
 import { formatPrice, formatVolume, formatTimeRemaining } from '@/lib/utils'
 import Link from 'next/link'
 
@@ -15,11 +15,8 @@ export default function WatchlistPage() {
   const { watchlist, loading, error, removeFromWatchlist, refetch } = useWatchlist()
   const account = useActiveAccount()
 
-  useEffect(() => {
-    if (account) {
-      refetch()
-    }
-  }, [account, refetch])
+  // Only fetch once on mount if account exists, not on every navigation
+  // Data will be cached and reused when navigating back
 
   if (!account) {
     return (
@@ -71,12 +68,24 @@ export default function WatchlistPage() {
               <Star className="w-6 h-6 sm:w-8 sm:h-8 lg:w-10 lg:h-10 text-yellow-500 fill-yellow-500" />
               Your Watchlist
             </h1>
-            <Link href="/">
-              <Button variant="outline">
-                Back to Markets
-              </Button>
-            </Link>
-          </div>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        onClick={() => refetch()}
+                        disabled={loading}
+                        className="flex items-center gap-2"
+                        title="Refresh watchlist"
+                      >
+                        <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+                        <span className="hidden sm:inline">Refresh</span>
+                      </Button>
+                      <Link href="/">
+                        <Button variant="outline">
+                          Back to Markets
+                        </Button>
+                      </Link>
+                    </div>
+                  </div>
           <p className="text-gray-600 dark:text-gray-400">
             {watchlist.length} saved {watchlist.length === 1 ? 'market' : 'markets'}
           </p>
@@ -100,7 +109,7 @@ export default function WatchlistPage() {
 
         {/* Watchlist Grid */}
         {watchlist.length > 0 && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
             {watchlist.map((item, index) => (
               <motion.div
                 key={item.id}
@@ -109,9 +118,9 @@ export default function WatchlistPage() {
                 transition={{ delay: index * 0.05 }}
               >
                 <Card className="polymarket-card-gradient hover:shadow-xl transition-all duration-300 h-full">
-                  <CardHeader className="pb-3">
+                  <CardHeader className="pb-2 px-4 pt-4">
                     <div className="flex items-start justify-between gap-2">
-                      <CardTitle className="text-lg font-bold text-gray-900 dark:text-white line-clamp-3 flex-1">
+                      <CardTitle className="text-base font-semibold text-gray-900 dark:text-white line-clamp-3 flex-1">
                         {item.market_question}
                       </CardTitle>
                       <Button
@@ -120,17 +129,17 @@ export default function WatchlistPage() {
                         }}
                         variant="ghost"
                         size="sm"
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 flex-shrink-0"
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 flex-shrink-0 min-w-[32px] min-h-[32px] w-8 h-8 p-0"
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <Trash2 className="w-3.5 h-3.5" />
                       </Button>
                     </div>
                   </CardHeader>
-                  <CardContent className="space-y-4">
+                  <CardContent className="space-y-3 px-4 pb-4">
                     {/* Notes */}
                     {item.notes && (
-                      <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-                        <p className="text-sm text-blue-900 dark:text-blue-100">
+                      <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-md border border-blue-200 dark:border-blue-800">
+                        <p className="text-xs text-blue-900 dark:text-blue-100 leading-relaxed">
                           📝 {item.notes}
                         </p>
                       </div>
@@ -138,12 +147,12 @@ export default function WatchlistPage() {
 
                     {/* Alert Status */}
                     {item.alert_enabled && (
-                      <div className="flex items-center gap-2 p-2 bg-green-50 dark:bg-green-900/20 rounded border border-green-200 dark:border-green-800">
-                        <Badge variant="secondary" className="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">
+                      <div className="flex items-center gap-1.5 p-1.5 bg-green-50 dark:bg-green-900/20 rounded-md border border-green-200 dark:border-green-800">
+                        <Badge variant="secondary" className="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 text-[10px] px-1.5 py-0.5">
                           🔔 Alert Active
                         </Badge>
                         {item.alert_price && (
-                          <span className="text-sm text-green-700 dark:text-green-300">
+                          <span className="text-xs text-green-700 dark:text-green-300">
                             @ {formatPrice(item.alert_price)}
                           </span>
                         )}
@@ -151,14 +160,14 @@ export default function WatchlistPage() {
                     )}
 
                     {/* Added Date */}
-                    <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+                    <div className="flex items-center justify-between text-[10px] text-gray-500 dark:text-gray-400">
                       <span>Added {new Date(item.added_at).toLocaleDateString()}</span>
                     </div>
 
                     {/* Actions */}
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-2 gap-1.5">
                       <Link href={`/?market=${item.market_id}`} className="w-full">
-                        <Button variant="outline" className="w-full" size="sm">
+                        <Button variant="outline" className="w-full py-1.5 text-xs" size="sm">
                           View Market
                         </Button>
                       </Link>
@@ -169,9 +178,9 @@ export default function WatchlistPage() {
                         }}
                         variant="outline"
                         size="sm"
-                        className="w-full"
+                        className="w-full py-1.5 text-xs"
                       >
-                        <ExternalLink className="w-4 h-4 mr-1" />
+                        <ExternalLink className="w-3.5 h-3.5 mr-1" />
                         Polymarket
                       </Button>
                     </div>

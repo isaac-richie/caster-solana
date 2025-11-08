@@ -124,11 +124,11 @@
 /* PolyCaster blue variant gradients and branding */
 @layer components {
   .polycaster-gradient {
-    background: linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #60a5fa 100%);
+    background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 50%, #2563eb 100%);
   }
   
   .polycaster-header-gradient {
-    background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 50%, #3b82f6 100%);
+    background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 50%, #2563eb 100%);
   }
   
   .polycaster-primary-blue {
@@ -201,10 +201,11 @@
   }
   
   .polycaster-text-gradient {
-    background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+    background: linear-gradient(135deg, #ffffff 0%, #e0e7ff 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
   }
   
   .polycaster-border-gradient {

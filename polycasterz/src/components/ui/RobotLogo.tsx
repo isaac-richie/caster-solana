@@ -30,7 +30,7 @@ export function RobotLogo({ size = 'md', className = '', animated = false }: Rob
         height="10"
         rx="2"
         fill="currentColor"
-        className="text-white"
+        className="text-white drop-shadow-sm"
       />
       
       {/* Antenna */}

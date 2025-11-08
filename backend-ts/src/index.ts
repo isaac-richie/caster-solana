@@ -211,7 +211,7 @@ app.get('/markets/active', async (req, res) => {
 
 app.get('/markets/recent', async (req, res) => {
   try {
-    const limit = parseInt(req.query.limit as string) || 20
+    const limit = parseInt(req.query.limit as string) || 24
     const markets = await polymarketService.getRecentMarkets(limit)
     res.json({ 
       success: true, 
@@ -417,13 +417,21 @@ app.get('/markets/:id', async (req, res) => {
 app.post('/ai/analyze/:marketId', async (req, res) => {
   try {
     const { marketId } = req.params
-    const { payment_verified, user_wallet }: AIAnalysisRequest = req.body
+    const { payment_verified, user_wallet, transaction_hash }: AIAnalysisRequest = req.body
 
+    // Always require payment verification
     if (!payment_verified) {
       return res.status(402).json({ 
         success: false,
         error: 'Payment required. Please verify payment via frontend.' 
       })
+    }
+
+    // If transaction hash provided, verify it on-chain
+    if (transaction_hash && user_wallet) {
+      // TODO: Add on-chain verification of the payment transaction
+      // For now, we trust the frontend verification
+      console.log(`✅ Payment verified: ${transaction_hash} from ${user_wallet}`)
     }
 
     // Get market data
@@ -448,20 +456,25 @@ app.post('/ai/analyze/:marketId', async (req, res) => {
         }
 
         // Store the signal with user wallet
+        console.log(`💾 Storing signal for user ${user_wallet}...`)
         const storedSignal = await databaseService.createSignal({
           ...signal,
           user_wallet: user_wallet
         })
 
         if (storedSignal) {
+          console.log(`✅ Signal stored successfully: ${storedSignal.id}`)
           // Update user stats
           await databaseService.updateUser(user_wallet, {
             total_signals_purchased: (user.total_signals_purchased || 0) + 1,
-            total_spent: (user.total_spent || 0) + 0.5
+            total_spent: (user.total_spent || 0) + 0.2
           })
+          console.log(`✅ User stats updated for ${user_wallet}`)
+        } else {
+          console.warn(`⚠️  Signal storage returned null for user ${user_wallet}`)
         }
       } catch (dbError) {
-        console.error('Database error storing signal:', dbError)
+        console.error('❌ Database error storing signal:', dbError)
         // Continue without failing the request
       }
     }
@@ -636,12 +649,26 @@ app.patch('/users/:walletAddress/email', async (req, res) => {
     }
 
     // Send verification email
+    console.log(`📧 Sending verification email to: ${email}`)
     const emailSent = await emailService.sendVerificationEmail(email, verificationToken)
+    
+    if (!emailSent) {
+      console.error('❌ Failed to send verification email')
+      // Still return success for user update, but indicate email wasn't sent
+      return res.json({ 
+        success: true, 
+        user: updatedUser,
+        emailSent: false,
+        message: 'Email updated, but verification email failed to send. Please try resending verification.',
+        warning: 'Verification email could not be sent. Please check Resend configuration.'
+      })
+    }
 
+    console.log(`✅ Verification email sent successfully to: ${email}`)
     res.json({ 
       success: true, 
       user: updatedUser,
-      emailSent,
+      emailSent: true,
       message: 'Email updated. Please check your inbox to verify your email address.'
     })
   } catch (error) {

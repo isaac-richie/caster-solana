@@ -9,13 +9,21 @@ export class DatabaseService {
     const supabaseKey = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY
 
     if (!supabaseUrl || !supabaseKey) {
-      console.warn('WARNING: Supabase credentials not found in environment variables')
+      console.warn('⚠️  WARNING: Supabase credentials not found in environment variables')
+      console.warn('⚠️  SUPABASE_URL:', supabaseUrl ? '✅ Set' : '❌ Missing')
+      console.warn('⚠️  SUPABASE_KEY:', supabaseKey ? '✅ Set' : '❌ Missing')
       this.supabase = null
       return
     }
 
-    this.supabase = createClient(supabaseUrl, supabaseKey)
-    console.log('✅ Supabase client initialized')
+    try {
+      this.supabase = createClient(supabaseUrl, supabaseKey)
+      console.log('✅ Supabase client initialized')
+      console.log(`✅ Supabase URL: ${supabaseUrl.substring(0, 30)}...`)
+    } catch (error) {
+      console.error('❌ Failed to initialize Supabase client:', error)
+      this.supabase = null
+    }
   }
 
   // User operations
@@ -350,7 +358,7 @@ export class DatabaseService {
 
       return {
         total_signals: totalSignals,
-        total_spent: totalSignals * 0.5, // Assuming $0.50 per signal
+        total_spent: totalSignals * 0.2, // Assuming $0.20 per signal
         success_rate: Math.round(successRate * 100) / 100,
         favorite_categories: favoriteCategories
       }
@@ -670,13 +678,32 @@ export class DatabaseService {
         .order('last_checked_at', { ascending: true, nullsFirst: true })
 
       if (error) {
-        console.error('Error fetching active alerts:', error)
+        console.error('❌ Supabase error fetching active alerts:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        })
         return []
       }
 
-      return data as PriceAlert[]
+      return (data || []) as PriceAlert[]
     } catch (error) {
-      console.error('Database error fetching active alerts:', error)
+      console.error('❌ Database error fetching active alerts:', {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        details: error instanceof Error ? error.stack : String(error),
+        hint: 'Check Supabase connection and credentials',
+        code: error instanceof Error && 'code' in error ? String(error.code) : ''
+      })
+      
+      // Check if it's a network/fetch error
+      if (error instanceof Error && error.message.includes('fetch')) {
+        console.error('⚠️  Network error - Check:')
+        console.error('   1. Supabase URL is correct:', process.env.SUPABASE_URL)
+        console.error('   2. Internet connection is active')
+        console.error('   3. Supabase service is accessible')
+      }
+      
       return []
     }
   }

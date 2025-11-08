@@ -1,9 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { 
   Search, 
   Star, 
@@ -12,8 +10,6 @@ import {
   Calculator, 
   TrendingUp,
   Zap,
-  Shield,
-  CheckCircle2,
   X
 } from 'lucide-react'
 import { motion } from 'framer-motion'
@@ -25,7 +21,6 @@ interface WelcomeModalProps {
 }
 
 export function WelcomeModal({ isOpen, onClose, onStartTour }: WelcomeModalProps) {
-  const [showFeatures, setShowFeatures] = useState(false)
 
   const features = [
     {
@@ -72,13 +67,6 @@ export function WelcomeModal({ isOpen, onClose, onStartTour }: WelcomeModalProps
     },
   ]
 
-  const benefits = [
-    'Free to use - No signup required',
-    'Real-time market data',
-    'Mobile-friendly interface',
-    'Email notifications',
-    'Privacy-focused',
-  ]
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -115,22 +103,6 @@ export function WelcomeModal({ isOpen, onClose, onStartTour }: WelcomeModalProps
               Discover, analyze, and track prediction markets with intelligent insights
             </p>
           </motion.div>
-
-          {/* Key Benefits */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {benefits.map((benefit, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.1 }}
-                className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg"
-              >
-                <CheckCircle2 className="w-5 h-5 text-green-500 flex-shrink-0" />
-                <span className="text-sm text-gray-700 dark:text-gray-300">{benefit}</span>
-              </motion.div>
-            ))}
-          </div>
 
           {/* Features Grid */}
           <div>

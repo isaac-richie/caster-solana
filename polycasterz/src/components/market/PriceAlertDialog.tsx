@@ -179,7 +179,7 @@ export function PriceAlertDialog({ market, onClose }: PriceAlertDialogProps) {
         <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
           <p className="text-sm text-blue-900 dark:text-blue-100">
             <Bell className="w-4 h-4 inline mr-2" />
-            You'll be notified when <strong>{market.question}</strong> price goes{' '}
+            You&apos;ll be notified when <strong>{market.question}</strong> price goes{' '}
             <strong className={
               condition === 'above' ? 'text-green-600 dark:text-green-400' :
               condition === 'below' ? 'text-red-600 dark:text-red-400' :

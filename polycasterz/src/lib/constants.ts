@@ -19,7 +19,6 @@ export const MARKET_STATUS = [
 
 // Sort options
 export const SORT_OPTIONS = [
-  { value: 'volume', label: 'Volume' },
   { value: 'price', label: 'Price' },
   { value: 'trend', label: 'Trend' },
   { value: 'date', label: 'Date' },

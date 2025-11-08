@@ -33,6 +33,18 @@ export interface Signal {
   created_at: string
   user_wallet?: string
   market_category?: string
+  // Premium $100 analysis fields
+  executive_summary?: string
+  market_context?: string
+  fundamental_analysis?: string
+  technical_analysis?: string
+  market_microstructure?: string
+  key_factors?: string[]
+  risk_assessment?: string
+  opportunity_analysis?: string
+  price_analysis?: string
+  competitive_analysis?: string
+  action_plan?: string
 }
 
 export interface User {
@@ -83,9 +95,10 @@ export interface PolymarketMarket {
 }
 
 export interface AIAnalysisRequest {
-  market_id: string
+  market_id?: string
   payment_verified: boolean
   user_wallet?: string
+  transaction_hash?: string
 }
 
 export interface AIAnalysisResponse {

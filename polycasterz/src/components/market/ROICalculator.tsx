@@ -1,10 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { 
   DollarSign, 
   TrendingUp, 
@@ -52,11 +51,7 @@ export function ROICalculator({ market, onClose }: ROICalculatorProps) {
   const [position, setPosition] = useState<'YES' | 'NO'>('YES')
   const [result, setResult] = useState<ROIResult | null>(null)
 
-  useEffect(() => {
-    calculateROI()
-  }, [investmentAmount, position, market])
-
-  const calculateROI = () => {
+  const calculateROI = useCallback(() => {
     if (investmentAmount <= 0) {
       setResult(null)
       return
@@ -107,7 +102,11 @@ export function ROICalculator({ market, onClose }: ROICalculatorProps) {
       riskRewardRatio,
       breakEvenPrice
     })
-  }
+  }, [investmentAmount, position, market])
+
+  useEffect(() => {
+    calculateROI()
+  }, [calculateROI])
 
 
   return (

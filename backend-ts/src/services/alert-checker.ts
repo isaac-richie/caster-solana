@@ -6,6 +6,7 @@ import { PriceAlert } from '../types'
 export class AlertCheckerService {
   private isRunning: boolean = false
   private checkInterval: NodeJS.Timeout | null = null
+  private lastLogTime: number = 0
   private readonly POLL_INTERVAL = 30000 // 30 seconds
 
   constructor() {
@@ -48,11 +49,16 @@ export class AlertCheckerService {
       const activeAlerts = await databaseService.getActiveAlerts()
       
       if (activeAlerts.length === 0) {
-        console.log('No active alerts to check')
+        // Only log if we haven't logged recently (to avoid spam)
+        const now = Date.now()
+        if (!this.lastLogTime || now - this.lastLogTime > 60000) { // Log once per minute
+          console.log('No active alerts to check')
+          this.lastLogTime = now
+        }
         return
       }
 
-      console.log(`Checking ${activeAlerts.length} active alert(s)...`)
+      console.log(`🔔 Checking ${activeAlerts.length} active alert(s)...`)
 
       // Group alerts by market_id to minimize API calls
       const alertsByMarket = this.groupAlertsByMarket(activeAlerts)
@@ -63,7 +69,23 @@ export class AlertCheckerService {
       }
 
     } catch (error) {
-      console.error('Error checking alerts:', error)
+      // Check if it's a network/fetch error
+      const isNetworkError = error instanceof Error && 
+        (error.message.includes('fetch') || 
+         error.message.includes('ECONNREFUSED') ||
+         error.message.includes('ETIMEDOUT') ||
+         error.message.includes('ENOTFOUND'))
+      
+      if (isNetworkError) {
+        console.error('⚠️  Network error checking alerts (Supabase connection issue):')
+        console.error('   This is usually temporary. The service will retry on the next interval.')
+        console.error('   Check: Internet connection, Supabase service status')
+      } else {
+        console.error('❌ Error checking alerts:', {
+          message: error instanceof Error ? error.message : 'Unknown error',
+          stack: error instanceof Error ? error.stack : String(error)
+        })
+      }
     }
   }
 

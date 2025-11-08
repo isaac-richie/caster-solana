@@ -13,14 +13,25 @@ export class EmailService {
 
     if (!apiKey) {
       console.warn('⚠️  RESEND_API_KEY not found - email notifications disabled')
+      console.warn('⚠️  Please set RESEND_API_KEY in your .env file')
       this.resend = null
     } else {
       this.resend = new Resend(apiKey)
       console.log('✅ Email service initialized (Resend)')
+      console.log(`✅ API Key: ${apiKey.substring(0, 10)}...${apiKey.substring(apiKey.length - 4)}`)
     }
 
-    this.fromEmail = process.env.EMAIL_FROM || 'alerts@polycaster.com'
+    this.fromEmail = process.env.EMAIL_FROM || 'onboarding@resend.dev'
     this.fromName = process.env.EMAIL_FROM_NAME || 'PolyCaster'
+    
+    console.log(`📧 Email From: ${this.fromEmail}`)
+    console.log(`📧 Email From Name: ${this.fromName}`)
+    
+    // Warn if using default email (might not be verified)
+    if (this.fromEmail === 'alerts@polycaster.com' || !process.env.EMAIL_FROM) {
+      console.warn('⚠️  Using default email address. Make sure EMAIL_FROM is set and verified in Resend.')
+      console.warn('⚠️  For testing, use: onboarding@resend.dev (pre-verified by Resend)')
+    }
   }
 
   /**
@@ -81,12 +92,17 @@ export class EmailService {
     verificationToken: string
   ): Promise<boolean> {
     if (!this.resend) {
-      console.warn('Email service not available - cannot send verification email')
+      console.warn('⚠️  Email service not available - cannot send verification email')
+      console.warn('⚠️  RESEND_API_KEY is missing or invalid')
       return false
     }
 
     try {
       const verificationUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/verify-email?token=${verificationToken}`
+
+      console.log(`📧 Attempting to send verification email to: ${to}`)
+      console.log(`📧 From: ${this.fromEmail}`)
+      console.log(`📧 Verification URL: ${verificationUrl}`)
 
       const { data, error } = await this.resend.emails.send({
         from: `${this.fromName} <${this.fromEmail}>`,
@@ -122,14 +138,26 @@ export class EmailService {
       })
 
       if (error) {
-        console.error('Error sending verification email:', error)
+        console.error('❌ Resend API Error:', error)
+        console.error('❌ Error details:', JSON.stringify(error, null, 2))
         return false
       }
 
-      console.log(`✅ Verification email sent to ${to}`)
-      return true
+      if (data?.id) {
+        console.log(`✅ Verification email sent successfully!`)
+        console.log(`✅ Email ID: ${data.id}`)
+        console.log(`✅ Recipient: ${to}`)
+        return true
+      } else {
+        console.warn('⚠️  Email sent but no ID returned from Resend')
+        return true // Still return true if no error
+      }
     } catch (error) {
-      console.error('Error sending verification email:', error)
+      console.error('❌ Exception sending verification email:', error)
+      if (error instanceof Error) {
+        console.error('❌ Error message:', error.message)
+        console.error('❌ Error stack:', error.stack)
+      }
       return false
     }
   }

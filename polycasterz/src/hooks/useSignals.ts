@@ -1,46 +1,36 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { useActiveAccount } from 'thirdweb/react'
 import { getUserSignals, type Signal } from '@/lib/api/signals'
 
 export function useSignals() {
   const account = useActiveAccount()
-  const [signals, setSignals] = useState<Signal[]>([])
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
   const walletAddress = account?.address
 
-  useEffect(() => {
-    if (!walletAddress) {
-      setSignals([])
-      return
-    }
-
-    const fetchSignals = async () => {
-      setLoading(true)
-      setError(null)
-      try {
-        const data = await getUserSignals(walletAddress, 100)
-        setSignals(data)
-      } catch (err) {
-        console.error('Error fetching signals:', err)
-        setError('Failed to load signal history')
-        setSignals([])
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchSignals()
-  }, [walletAddress])
+  const {
+    data: signals = [],
+    isLoading: loading,
+    error,
+    refetch,
+  } = useQuery<Signal[]>({
+    queryKey: ['signals', walletAddress],
+    queryFn: async () => {
+      if (!walletAddress) return []
+      return await getUserSignals(walletAddress, 100)
+    },
+    enabled: !!walletAddress,
+    staleTime: 1 * 60 * 1000, // 1 minute - signals are fresh for 1 minute
+    refetchOnWindowFocus: false,
+    refetchOnMount: true, // Refetch when component mounts to get latest signals
+  })
 
   return {
     signals,
     loading,
-    error,
+    error: error ? 'Failed to load signal history' : null,
     walletAddress,
+    refetch, // Expose refetch function for manual updates
   }
 }
 

@@ -1,8 +1,8 @@
 'use client'
 
-import { useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { HelpCircle, GraduationCap } from 'lucide-react'
+import { HelpCircle, GraduationCap, BookOpen } from 'lucide-react'
+import Link from 'next/link'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -31,6 +31,12 @@ export function HelpButton({ onStartTour }: HelpButtonProps) {
         <DropdownMenuItem onClick={onStartTour} className="cursor-pointer">
           <GraduationCap className="w-4 h-4 mr-2" />
           Start Tour
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link href="/help" className="cursor-pointer flex items-center">
+            <BookOpen className="w-4 h-4 mr-2" />
+            FAQ & Help
+          </Link>
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={() => window.open('https://polycaster.com/docs', '_blank')}

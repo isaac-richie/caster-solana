@@ -39,7 +39,7 @@ export class FacilitatorService {
   async settlePayment(
     resourceUrl: string,
     paymentData: string,
-    price: string = '$0.50'
+    price: string = '$0.20'
   ): Promise<FacilitatorResponse> {
     try {
       // If facilitator is not available (missing secret key), return mock response

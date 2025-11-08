@@ -1,12 +1,11 @@
 'use client'
 
 import { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
-import { Brain, TrendingUp, AlertTriangle, CheckCircle } from 'lucide-react'
+import { Brain } from 'lucide-react'
 import { Facilitator } from '@/components/ai/Facilitator'
 import { Market, MarketAnalysis } from '@/types'
 

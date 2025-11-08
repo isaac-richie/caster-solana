@@ -80,11 +80,13 @@ export class PolymarketService {
     }
   }
 
-  async getRecentMarkets(limit: number = 20): Promise<Market[]> {
+  async getRecentMarkets(limit: number = 24): Promise<Market[]> {
     try {
       // NOTE: Polymarket rarely creates truly "new" markets (newest are from Dec 2024)
       // Instead, show "Fresh" markets - recently active with good volume
-      const response = await axios.get(`${this.apiUrl}?active=true&closed=false&limit=${limit * 3}&sortBy=updatedAt&sortOrder=desc`)
+      // Fetch more markets to ensure we have enough after filtering
+      const fetchLimit = Math.max(limit * 4, 100)
+      const response = await axios.get(`${this.apiUrl}?active=true&closed=false&limit=${fetchLimit}&sortBy=updatedAt&sortOrder=desc`)
       const markets = response.data || []
       
       const now = Date.now()

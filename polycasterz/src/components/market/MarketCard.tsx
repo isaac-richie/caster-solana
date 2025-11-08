@@ -5,7 +5,6 @@ import { motion } from 'framer-motion'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Progress } from '@/components/ui/progress'
 import {
   Dialog,
   DialogContent,
@@ -43,7 +42,6 @@ import {
   formatPercentageChange,
   getTrendColor,
   getTrendIcon,
-  getRiskLevelColor,
   cn
 } from '@/lib/utils'
 import { useWatchlist } from '@/hooks/useWatchlist'
@@ -187,48 +185,48 @@ export function MarketCard({
       className={cn("polymarket-card-gradient polymarket-hover-lift polymarket-shadow-lg rounded-lg border border-gray-200 dark:border-gray-700", className)}
     >
       <Card className="border-0 shadow-none bg-transparent">
-        <CardHeader className="pb-3">
+        <CardHeader className="pb-2 px-4 pt-4">
           <div className="flex justify-between items-start">
             <div className="flex-1">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 line-clamp-2">
+              <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-1.5 line-clamp-2">
                 {market.question}
               </h3>
-              <div className="flex items-center space-x-2 mb-2">
-                <Badge variant="outline" className="text-xs">
+              <div className="flex items-center space-x-2 mb-1">
+                <Badge variant="outline" className="text-[10px] px-1.5 py-0.5">
                   {market.category}
                 </Badge>
                 <Badge 
                   variant="secondary" 
-                  className={cn("text-xs", getTrendColor(market.price_trend))}
+                  className={cn("text-[10px] px-1.5 py-0.5", getTrendColor(market.price_trend))}
                 >
                   {getTrendIcon(market.price_trend)} {formatPercentageChange(market.price_change_percent)}
                 </Badge>
               </div>
             </div>
-            <div className="text-right">
-              <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Confidence</div>
-              <div className="text-sm font-medium text-gray-900 dark:text-white">
+            <div className="text-right ml-2">
+              <div className="text-[10px] text-gray-500 dark:text-gray-400 mb-0.5">Confidence</div>
+              <div className="text-xs font-medium text-gray-900 dark:text-white">
                 {market.confidence}
               </div>
             </div>
           </div>
         </CardHeader>
 
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-3 px-4 pb-4">
           {/* Description */}
-          <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2">
+          <p className="text-xs text-gray-600 dark:text-gray-300 line-clamp-2 leading-relaxed">
             {market.description}
           </p>
 
           {/* Outcome Prices Display - Yes/No Split */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 mb-1">
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between text-[10px] text-gray-500 dark:text-gray-400 mb-0.5">
               <span>Prediction Odds</span>
               <span className="font-medium">{market.outcomes || 'Yes/No'}</span>
             </div>
             
             {/* Visual Probability Bar */}
-            <div className="relative h-8 bg-gray-200 dark:bg-gray-700 rounded-lg overflow-hidden">
+            <div className="relative h-6 bg-gray-200 dark:bg-gray-700 rounded-md overflow-hidden">
               <div 
                 className="absolute left-0 top-0 h-full bg-gradient-to-r from-green-500 to-green-600 flex items-center justify-start px-3 transition-all duration-300"
                 style={{ width: `${market.current_price * 100}%` }}
@@ -250,16 +248,16 @@ export function MarketCard({
             </div>
 
             {/* Price Details */}
-            <div className="grid grid-cols-2 gap-2 pt-2">
-              <div className="text-center p-2 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
-                <div className="text-xs text-green-600 dark:text-green-400 mb-1">YES Price</div>
-                <div className="text-lg font-bold text-green-700 dark:text-green-300">
+            <div className="grid grid-cols-2 gap-1.5 pt-1.5">
+              <div className="text-center p-1.5 bg-green-50 dark:bg-green-900/20 rounded-md border border-green-200 dark:border-green-800">
+                <div className="text-[10px] text-green-600 dark:text-green-400 mb-0.5">YES Price</div>
+                <div className="text-sm font-bold text-green-700 dark:text-green-300">
                   {formatPrice(market.current_price)}
                 </div>
               </div>
-              <div className="text-center p-2 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
-                <div className="text-xs text-red-600 dark:text-red-400 mb-1">NO Price</div>
-                <div className="text-lg font-bold text-red-700 dark:text-red-300">
+              <div className="text-center p-1.5 bg-red-50 dark:bg-red-900/20 rounded-md border border-red-200 dark:border-red-800">
+                <div className="text-[10px] text-red-600 dark:text-red-400 mb-0.5">NO Price</div>
+                <div className="text-sm font-bold text-red-700 dark:text-red-300">
                   {formatPrice(1 - market.current_price)}
                 </div>
               </div>
@@ -267,58 +265,58 @@ export function MarketCard({
           </div>
 
           {/* Analytics Grid - 2x2 */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center">
-                  <BarChart3 className="w-3 h-3 mr-1" />
+          <div className="grid grid-cols-2 gap-2">
+            <div className="p-2 bg-gray-50 dark:bg-gray-800 rounded-md">
+              <div className="flex items-center justify-between mb-0.5">
+                <span className="text-[10px] text-gray-500 dark:text-gray-400 flex items-center">
+                  <BarChart3 className="w-2.5 h-2.5 mr-0.5" />
                   Volume 24h
                 </span>
               </div>
-              <div className="text-sm font-bold text-gray-900 dark:text-white">
+              <div className="text-xs font-bold text-gray-900 dark:text-white">
                 {formatVolume(market.volume)}
               </div>
             </div>
             
-            <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center">
-                  <DollarSign className="w-3 h-3 mr-1" />
+            <div className="p-2 bg-gray-50 dark:bg-gray-800 rounded-md">
+              <div className="flex items-center justify-between mb-0.5">
+                <span className="text-[10px] text-gray-500 dark:text-gray-400 flex items-center">
+                  <DollarSign className="w-2.5 h-2.5 mr-0.5" />
                   Liquidity
                 </span>
               </div>
-              <div className="text-sm font-bold text-gray-900 dark:text-white">
+              <div className="text-xs font-bold text-gray-900 dark:text-white">
                 {formatLiquidity(market.liquidity)}
               </div>
             </div>
 
-            <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center">
-                  <Activity className="w-3 h-3 mr-1" />
+            <div className="p-2 bg-gray-50 dark:bg-gray-800 rounded-md">
+              <div className="flex items-center justify-between mb-0.5">
+                <span className="text-[10px] text-gray-500 dark:text-gray-400 flex items-center">
+                  <Activity className="w-2.5 h-2.5 mr-0.5" />
                   Last Update
                 </span>
               </div>
-              <div className="text-sm font-bold text-gray-900 dark:text-white">
+              <div className="text-xs font-bold text-gray-900 dark:text-white">
                 {formatTimeAgo(market.updated_at)}
               </div>
             </div>
 
-            <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center">
-                  <Calendar className="w-3 h-3 mr-1" />
+            <div className="p-2 bg-gray-50 dark:bg-gray-800 rounded-md">
+              <div className="flex items-center justify-between mb-0.5">
+                <span className="text-[10px] text-gray-500 dark:text-gray-400 flex items-center">
+                  <Calendar className="w-2.5 h-2.5 mr-0.5" />
                   Market Age
                 </span>
               </div>
-              <div className="text-sm font-bold text-gray-900 dark:text-white">
+              <div className="text-xs font-bold text-gray-900 dark:text-white">
                 {formatTimeAgo(market.created_at)}
               </div>
             </div>
           </div>
 
           {/* Market Status */}
-          <div className="flex justify-between items-center text-sm">
+          <div className="flex justify-between items-center text-xs">
             <div className="flex items-center space-x-2">
               <Clock className="w-4 h-4 text-gray-400 dark:text-gray-500" />
               <span className="text-gray-600 dark:text-gray-300">
@@ -335,48 +333,48 @@ export function MarketCard({
 
           {/* Risk Warning for Low Confidence */}
           {parseFloat(market.confidence) < 0.6 && (
-            <div className="flex items-center space-x-2 p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded-md border border-yellow-200 dark:border-yellow-800">
-              <AlertTriangle className="w-4 h-4 text-yellow-600 dark:text-yellow-400" />
-              <span className="text-xs text-yellow-800 dark:text-yellow-200">
+            <div className="flex items-center space-x-1.5 p-1.5 bg-yellow-50 dark:bg-yellow-900/20 rounded-md border border-yellow-200 dark:border-yellow-800">
+              <AlertTriangle className="w-3 h-3 text-yellow-600 dark:text-yellow-400 flex-shrink-0" />
+              <span className="text-[10px] text-yellow-800 dark:text-yellow-200 leading-tight">
                 Low confidence market - Higher risk
               </span>
             </div>
           )}
 
           {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-1.5">
             {/* Main Action Buttons */}
-            <div className="flex gap-2 flex-1">
+            <div className="flex gap-1.5 flex-1">
               <Button
                 onClick={handleAnalyze}
                 disabled={!market.active || isAnalyzing}
                 data-onboarding="ai-analysis"
-                className="polycaster-gradient hover:opacity-90 disabled:bg-gray-400 text-white py-2 sm:py-3 px-3 sm:px-4 rounded-lg transition-all duration-200 font-semibold shadow-md hover:shadow-lg disabled:cursor-not-allowed flex items-center justify-center space-x-1 flex-1 text-xs sm:text-sm"
+                className="polycaster-gradient hover:opacity-90 disabled:bg-gray-400 text-white py-1.5 sm:py-2 px-2.5 sm:px-3 rounded-md transition-all duration-200 font-medium shadow-sm hover:shadow-md disabled:cursor-not-allowed flex items-center justify-center space-x-1 flex-1 text-[11px] sm:text-xs"
               >
-                <Target className="w-3 h-3 sm:w-4 sm:h-4" />
+                <Target className="w-3 h-3" />
                 <span>AI</span>
               </Button>
               
               <Button
                 onClick={() => setShowROICalculator(true)}
                 variant="outline"
-                className="border-2 border-green-500 text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 py-2 sm:py-3 px-3 sm:px-4 rounded-lg transition-all duration-200 font-semibold shadow-sm hover:shadow-md flex items-center justify-center space-x-1 flex-1 text-xs sm:text-sm"
+                className="border border-green-500 text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 py-1.5 sm:py-2 px-2.5 sm:px-3 rounded-md transition-all duration-200 font-medium shadow-sm hover:shadow-md flex items-center justify-center space-x-1 flex-1 text-[11px] sm:text-xs"
               >
-                <Calculator className="w-3 h-3 sm:w-4 sm:h-4" />
+                <Calculator className="w-3 h-3" />
                 <span>ROI</span>
               </Button>
             </div>
 
             {/* Icon-Only Buttons */}
-            <div className="flex gap-2 justify-center sm:justify-end">
+            <div className="flex gap-1.5 justify-center sm:justify-end">
               <Button
                 onClick={() => setShowAlertDialog(true)}
                 variant="ghost"
                 size="icon"
-                className="text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/20 rounded-lg transition-all duration-200 min-w-[44px] min-h-[44px]"
+                className="text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/20 rounded-md transition-all duration-200 min-w-[36px] min-h-[36px] w-9 h-9"
                 title="Set Price Alert"
               >
-                <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
+                <Bell className="w-4 h-4" />
               </Button>
 
               <Button
@@ -385,14 +383,14 @@ export function MarketCard({
                 variant="ghost"
                 size="icon"
                 className={cn(
-                  "rounded-lg transition-all duration-200 min-w-[44px] min-h-[44px]",
+                  "rounded-md transition-all duration-200 min-w-[36px] min-h-[36px] w-9 h-9",
                   inWatchlist
                     ? "text-yellow-600 dark:text-yellow-400 hover:bg-yellow-50 dark:hover:bg-yellow-900/20"
                     : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800"
                 )}
                 title={inWatchlist ? "Remove from Watchlist" : "Add to Watchlist"}
               >
-                <Star className={cn("w-4 h-4 sm:w-5 sm:h-5", inWatchlist && "fill-yellow-500")} />
+                <Star className={cn("w-4 h-4", inWatchlist && "fill-yellow-500")} />
               </Button>
             </div>
           </div>
@@ -402,9 +400,9 @@ export function MarketCard({
             <Button
               onClick={() => setShowMarketDetails(true)}
               variant="outline"
-              className="w-full border-2 border-blue-500 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 py-2 sm:py-3 rounded-lg transition-all duration-200 font-semibold shadow-sm hover:shadow-md flex items-center justify-center space-x-2 text-xs sm:text-sm"
+              className="w-full border border-blue-500 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 py-1.5 sm:py-2 rounded-md transition-all duration-200 font-medium shadow-sm hover:shadow-md flex items-center justify-center space-x-1.5 text-[11px] sm:text-xs"
             >
-              <ExternalLink className="w-4 h-4 sm:w-5 sm:h-5" />
+              <ExternalLink className="w-3.5 h-3.5" />
               <span>View Market Details</span>
             </Button>
           )}
