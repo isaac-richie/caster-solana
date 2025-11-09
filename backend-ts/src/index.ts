@@ -1228,15 +1228,14 @@ app.use('*', (req, res) => {
 })
 
 // Export app for Vercel serverless functions
-// Vercel's @vercel/node builder expects the Express app to be exported
-// Since TypeScript compiles to CommonJS, we use module.exports
-module.exports = app
+// Vercel's @vercel/node builder expects a handler function
+const handler = app
+
+// Export as CommonJS (required for TypeScript compilation to CommonJS)
+module.exports = handler
 
 // Also export as ES module for compatibility
-export default app
-
-// Export as handler function for Vercel (alternative format)
-export const handler = app
+export default handler
 
 // Start server locally (only if not in Vercel environment)
 if (process.env.VERCEL !== '1' && process.env.NODE_ENV !== 'production') {

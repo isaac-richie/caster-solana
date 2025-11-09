@@ -1,0 +1,43 @@
+# ============================================
+# BACKEND ENVIRONMENT VARIABLES
+# Copy and paste into Vercel Backend Project
+# ============================================
+
+# Database (Supabase)
+SUPABASE_URL=https://jejfuksuzmsvqmgweopi.supabase.co
+SUPABASE_KEY=your_supabase_anon_key
+SUPABASE_SERVICE_KEY=your_supabase_service_role_key
+
+# AI Service (OpenAI)
+OPENAI_API_KEY=sk-proj-...
+OPENAI_MODEL=gpt-4o-mini
+
+# Email Service (Resend)
+RESEND_API_KEY=re_...
+EMAIL_FROM=onboarding@resend.dev
+EMAIL_FROM_NAME=PolyCaster
+
+# Payment & Blockchain (Base Sepolia)
+THIRDWEB_SECRET_KEY=your_thirdweb_secret_key
+NEXT_PUBLIC_THIRDWEB_CLIENT_ID=your_thirdweb_client_id
+SERVER_WALLET_ADDRESS=0x2983D066D42a79295dFAC0F752EA2FA7940C33dA
+PAYMENT_RECIPIENT_WALLET=0x2983D066D42a79295dFAC0F752EA2FA7940C33dA
+BASE_RPC_URL=https://sepolia.base.org
+USDC_CONTRACT_ADDRESS=0x036CbD53842c5426634e7929541eC2318f3dCF7e
+MIN_PAYMENT_AMOUNT=0.2
+
+# External APIs
+POLYMARKET_API_URL=https://gamma-api.polymarket.com/markets
+
+# Server Configuration
+FRONTEND_URL=https://your-frontend.vercel.app
+PORT=8000
+NODE_ENV=production
+
+# ============================================
+# NOTES:
+# 1. Replace all placeholder values with actual keys
+# 2. FRONTEND_URL should be set after frontend deploys
+# 3. Set environment to "Production" in Vercel
+# ============================================
+
