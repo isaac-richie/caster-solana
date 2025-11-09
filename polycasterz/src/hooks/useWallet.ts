@@ -22,7 +22,10 @@ export function useWallet() {
 
   const connect = async () => {
     try {
-      await wallet?.connect()
+      // Thirdweb handles connection via ConnectButton component
+      // This function is kept for compatibility but wallet.connect() requires parameters
+      // Use ConnectButton component instead for wallet connection
+      console.warn('useWallet.connect() is deprecated. Use ConnectButton component instead.')
     } catch (error) {
       console.error('Failed to connect wallet:', error)
     }

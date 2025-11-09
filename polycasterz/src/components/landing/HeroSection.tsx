@@ -6,6 +6,7 @@ import {
   Target, 
   Bell, 
   Star,
+  TrendingUp,
   ArrowRight,
   X
 } from 'lucide-react'
