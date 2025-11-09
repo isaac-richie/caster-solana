@@ -6,7 +6,7 @@
 - ✅ **Polymarket API**: Uses production URL `https://gamma-api.polymarket.com/markets`
 - ✅ **OpenAI API**: Uses environment variable (configured)
 - ✅ **Supabase**: Uses environment variable (configured)
-- ✅ **Base RPC**: Uses production URL `https://mainnet.base.org`
+- ✅ **Base RPC**: Uses Base Sepolia testnet URL `https://sepolia.base.org`
 - ✅ **Resend Email**: Uses environment variable (configured)
 
 ### 2. Data Fetching
@@ -102,8 +102,8 @@ EMAIL_FROM_NAME=PolyCaster
 
 # Payment
 THIRDWEB_SECRET_KEY=your_key
-BASE_RPC_URL=https://mainnet.base.org
-USDC_CONTRACT_ADDRESS=0x833589fcd6edb6e08f4c7c32d4f71b54bda02913
+BASE_RPC_URL=https://sepolia.base.org
+USDC_CONTRACT_ADDRESS=0x036CbD53842c5426634e7929541eC2318f3dCF7e
 SERVER_WALLET_ADDRESS=0x2983D066D42a79295dFAC0F752EA2FA7940C33dA
 
 # External APIs (optional - have defaults)

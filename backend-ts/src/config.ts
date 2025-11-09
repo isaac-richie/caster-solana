@@ -24,8 +24,8 @@ export const config = {
   OLLAMA_MODEL: process.env.OLLAMA_MODEL || 'llama3.2:latest',
 
   // Base Chain Configuration
-  BASE_RPC_URL: process.env.BASE_RPC_URL || 'https://mainnet.base.org',
-  USDC_CONTRACT_ADDRESS: process.env.USDC_CONTRACT_ADDRESS || '0x833589fcd6edb6e08f4c7c32d4f71b54bda02913',
+  BASE_RPC_URL: process.env.BASE_RPC_URL || 'https://sepolia.base.org',
+  USDC_CONTRACT_ADDRESS: process.env.USDC_CONTRACT_ADDRESS || '0x036CbD53842c5426634e7929541eC2318f3dCF7e',
   MIN_PAYMENT_AMOUNT: parseFloat(process.env.MIN_PAYMENT_AMOUNT || '0.5')
 }
 
