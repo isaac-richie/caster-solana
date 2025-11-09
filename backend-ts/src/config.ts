@@ -20,8 +20,6 @@ export const config = {
 
   // AI Configuration
   OPENAI_API_KEY: process.env.OPENAI_API_KEY || '',
-  OLLAMA_URL: process.env.OLLAMA_URL || 'http://localhost:11434',
-  OLLAMA_MODEL: process.env.OLLAMA_MODEL || 'llama3.2:latest',
 
   // Base Chain Configuration
   BASE_RPC_URL: process.env.BASE_RPC_URL || 'https://sepolia.base.org',

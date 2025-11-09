@@ -40,10 +40,6 @@ BASE_RPC_URL=https://sepolia.base.org
 USDC_CONTRACT_ADDRESS=0x036CbD53842c5426634e7929541eC2318f3dCF7e
 MIN_PAYMENT_AMOUNT=0.2
 
-# Thirdweb Facilitator (X402)
-X402_API_KEY=your_x402_api_key
-X402_FACILITATOR_URL=https://api.x402.io
-
 # External APIs
 POLYMARKET_API_URL=https://gamma-api.polymarket.com/markets
 
@@ -57,10 +53,6 @@ NODE_ENV=production
 # ============================================
 # OPTIONAL - Development/Testing
 # ============================================
-
-# Ollama (if using local AI)
-OLLAMA_URL=http://localhost:11434
-OLLAMA_MODEL=llama3.2:latest
 
 # Debug
 DEBUG=false
@@ -92,8 +84,6 @@ PAYMENT_RECIPIENT_WALLET=0x2983D066D42a79295dFAC0F752EA2FA7940C33dA
 BASE_RPC_URL=https://sepolia.base.org
 USDC_CONTRACT_ADDRESS=0x036CbD53842c5426634e7929541eC2318f3dCF7e
 MIN_PAYMENT_AMOUNT=0.2
-X402_API_KEY=your_x402_api_key
-X402_FACILITATOR_URL=https://api.x402.io
 POLYMARKET_API_URL=https://gamma-api.polymarket.com/markets
 FRONTEND_URL=https://your-frontend.vercel.app
 PORT=8000

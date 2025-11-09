@@ -24,10 +24,17 @@ export class FacilitatorService {
       return
     }
 
-    this.client = createThirdwebClient({
-      clientId: clientId,
-      secretKey: secretKey,
-    })
+    // Create client with available credentials
+    if (secretKey) {
+      this.client = createThirdwebClient({ secretKey })
+    } else if (clientId) {
+      this.client = createThirdwebClient({ clientId })
+    } else {
+      // This should not happen due to check above, but TypeScript needs this
+      this.client = null
+      this.thirdwebFacilitator = null
+      return
+    }
 
     this.thirdwebFacilitator = facilitator({
       client: this.client,
@@ -67,12 +74,15 @@ export class FacilitatorService {
         facilitator: this.thirdwebFacilitator,
       })
 
+      // Extract transaction hash from result
+      const transactionHash = (result as any).paymentReceipt?.transaction || (result as any).transactionHash || ''
+      
       return {
         status: 200,
         responseBody: {
           success: true,
           message: 'Payment settled successfully',
-          transaction_hash: result.transactionHash || '',
+          transaction_hash: transactionHash,
           result,
         },
         responseHeaders: {},
@@ -83,6 +93,7 @@ export class FacilitatorService {
         status: 500,
         responseBody: {
           success: false,
+          message: 'Payment settlement failed',
           error: error instanceof Error ? error.message : 'Unknown error',
         },
         responseHeaders: {},

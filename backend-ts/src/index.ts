@@ -490,7 +490,7 @@ app.post('/ai/analyze/:marketId', async (req, res) => {
           user_wallet: user_wallet
         })
 
-        if (storedSignal) {
+        if (storedSignal && user) {
           console.log(`✅ Signal stored successfully: ${storedSignal.id}`)
           // Update user stats
           await databaseService.updateUser(user_wallet, {
@@ -733,7 +733,7 @@ app.get('/users/verify-email', async (req, res) => {
     // Verify email
     const updatedUser = await databaseService.updateUser(user.wallet_address, {
       email_verified: true,
-      email_verification_token: null, // Clear token after verification
+      email_verification_token: undefined, // Clear token after verification
     })
 
     if (!updatedUser) {
@@ -1053,6 +1053,163 @@ app.delete('/alerts/:alertId', async (req, res) => {
   }
 })
 
+// Market analysis endpoint (for frontend compatibility)
+app.get('/markets/:marketId/analysis', async (req, res) => {
+  try {
+    const { marketId } = req.params
+    const market = await polymarketService.getMarketById(marketId)
+    
+    if (!market) {
+      return res.status(404).json({
+        success: false,
+        error: 'Market not found'
+      })
+    }
+
+    // Return market data as analysis (frontend can generate analysis client-side or call /ai/analyze)
+    res.json({
+      success: true,
+      market: {
+        id: market.id,
+        question: market.question,
+        current_price: market.current_price,
+        volume: market.volume,
+        liquidity: market.liquidity,
+        price_trend: market.price_trend,
+        price_change_24h: market.price_change_24h,
+        price_change_percent: market.price_change_percent
+      },
+      message: 'Use /ai/analyze/:marketId to get AI analysis'
+    })
+  } catch (error) {
+    console.error('Market analysis error:', error)
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch market analysis'
+    })
+  }
+})
+
+// Market signals endpoint (for frontend compatibility)
+app.get('/markets/:marketId/signals', async (req, res) => {
+  try {
+    const { marketId } = req.params
+    // Get signals for this market from database
+    // Note: This requires a database method to get signals by market_id
+    // For now, return empty array
+    res.json({
+      success: true,
+      signals: [],
+      count: 0,
+      message: 'Signals are stored per user. Use /users/:walletAddress/signals to get user signals'
+    })
+  } catch (error) {
+    console.error('Market signals error:', error)
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch market signals'
+    })
+  }
+})
+
+// Signals endpoints (for frontend compatibility)
+app.get('/signals', async (req, res) => {
+  try {
+    const { walletAddress } = req.query
+    
+    if (!walletAddress || typeof walletAddress !== 'string') {
+      return res.status(400).json({
+        success: false,
+        error: 'walletAddress query parameter is required'
+      })
+    }
+
+    const limit = parseInt(req.query.limit as string) || 10
+    const signals = await databaseService.getSignalsByUser(walletAddress, limit)
+    
+    res.json({
+      success: true,
+      signals,
+      count: signals.length
+    })
+  } catch (error) {
+    console.error('Signals fetch error:', error)
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch signals'
+    })
+  }
+})
+
+app.get('/signals/:id', async (req, res) => {
+  try {
+    const { id } = req.params
+    // Note: This requires a database method to get signal by ID
+    // For now, return not found
+    res.status(404).json({
+      success: false,
+      error: 'Signal not found. Use /users/:walletAddress/signals to get user signals'
+    })
+  } catch (error) {
+    console.error('Signal fetch error:', error)
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch signal'
+    })
+  }
+})
+
+// Payment endpoints (for frontend compatibility)
+app.post('/payment/create', async (req, res) => {
+  try {
+    // This endpoint is for compatibility - actual payment is handled via facilitator
+    const { marketId, amount, walletAddress } = req.body
+
+    if (!marketId || !amount || !walletAddress) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required fields: marketId, amount, walletAddress'
+      })
+    }
+
+    // Return payment info - frontend should use facilitator directly
+    res.json({
+      success: true,
+      message: 'Use facilitator service for payment. Call /api/payment/settle with facilitator payment data',
+      payment: {
+        marketId,
+        amount,
+        walletAddress
+      }
+    })
+  } catch (error) {
+    console.error('Payment creation error:', error)
+    res.status(500).json({
+      success: false,
+      error: 'Failed to create payment'
+    })
+  }
+})
+
+app.post('/payment/verify/:paymentId', async (req, res) => {
+  try {
+    const { paymentId } = req.params
+    // Payment verification is handled by facilitator
+    // This is a compatibility endpoint
+    res.json({
+      success: true,
+      verified: false,
+      message: 'Payment verification is handled by facilitator service. Use /api/payment/settle'
+    })
+  } catch (error) {
+    console.error('Payment verification error:', error)
+    res.status(500).json({
+      success: false,
+      error: 'Failed to verify payment'
+    })
+  }
+})
+
 // Error handling middleware
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
   console.error('Unhandled error:', err)
@@ -1070,17 +1227,37 @@ app.use('*', (req, res) => {
   })
 })
 
-// Start server
-app.listen(PORT, () => {
-  const baseUrl = process.env.FRONTEND_URL || `http://localhost:${PORT}`
-  console.log(`🚀 PolyCaster TypeScript backend running on port ${PORT}`)
-  console.log(`📊 Health check: ${baseUrl}/health`)
-  console.log(`💳 Facilitator: ${baseUrl}/api/payment/settle`)
-  console.log(`📈 Markets: ${baseUrl}/markets`)
-  console.log(`🤖 AI Analysis: ${baseUrl}/ai/analyze/:marketId`)
-  console.log(`🔔 Alerts: ${baseUrl}/alerts`)
-  
-  // Start alert checker service
-  alertCheckerService.start()
-  console.log(`🔔 Alert checker service started (checks every 30s)`)
-})
+// Export app for Vercel serverless functions
+// Vercel's @vercel/node builder expects the Express app to be exported
+// Since TypeScript compiles to CommonJS, we use module.exports
+module.exports = app
+
+// Also export as ES module for compatibility
+export default app
+
+// Export as handler function for Vercel (alternative format)
+export const handler = app
+
+// Start server locally (only if not in Vercel environment)
+if (process.env.VERCEL !== '1' && process.env.NODE_ENV !== 'production') {
+  app.listen(PORT, () => {
+    const baseUrl = process.env.FRONTEND_URL || `http://localhost:${PORT}`
+    console.log(`🚀 PolyCaster TypeScript backend running on port ${PORT}`)
+    console.log(`📊 Health check: ${baseUrl}/health`)
+    console.log(`💳 Facilitator: ${baseUrl}/api/payment/settle`)
+    console.log(`📈 Markets: ${baseUrl}/markets`)
+    console.log(`🤖 AI Analysis: ${baseUrl}/ai/analyze/:marketId`)
+    console.log(`🔔 Alerts: ${baseUrl}/alerts`)
+    
+    // Start alert checker service
+    alertCheckerService.start()
+    console.log(`🔔 Alert checker service started (checks every 30s)`)
+  })
+} else {
+  // In Vercel/production, start alert checker on module load
+  // Note: This may not work in serverless, consider using a separate service
+  if (process.env.VERCEL !== '1') {
+    alertCheckerService.start()
+    console.log(`🔔 Alert checker service started (checks every 30s)`)
+  }
+}

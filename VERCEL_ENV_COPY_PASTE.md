@@ -32,8 +32,6 @@ PAYMENT_RECIPIENT_WALLET=0x2983D066D42a79295dFAC0F752EA2FA7940C33dA
 BASE_RPC_URL=https://sepolia.base.org
 USDC_CONTRACT_ADDRESS=0x036CbD53842c5426634e7929541eC2318f3dCF7e
 MIN_PAYMENT_AMOUNT=0.2
-X402_API_KEY=your_x402_api_key
-X402_FACILITATOR_URL=https://api.x402.io
 POLYMARKET_API_URL=https://gamma-api.polymarket.com/markets
 FRONTEND_URL=https://your-frontend.vercel.app
 PORT=8000
@@ -71,8 +69,6 @@ NODE_ENV=production
 | `BASE_RPC_URL` | Base chain RPC endpoint | `https://sepolia.base.org` |
 | `USDC_CONTRACT_ADDRESS` | USDC token contract | `0x036CbD53842c5426634e7929541eC2318f3dCF7e` |
 | `MIN_PAYMENT_AMOUNT` | Minimum payment amount | `0.2` |
-| `X402_API_KEY` | X402 facilitator API key | `your_x402_key` |
-| `X402_FACILITATOR_URL` | X402 facilitator URL | `https://api.x402.io` |
 | `POLYMARKET_API_URL` | Polymarket API endpoint | `https://gamma-api.polymarket.com/markets` |
 | `FRONTEND_URL` | Frontend URL for CORS/emails | `https://your-frontend.vercel.app` |
 | `PORT` | Server port | `8000` |
@@ -140,8 +136,6 @@ PAYMENT_RECIPIENT_WALLET=0x2983D066D42a79295dFAC0F752EA2FA7940C33dA
 BASE_RPC_URL=https://sepolia.base.org
 USDC_CONTRACT_ADDRESS=0x036CbD53842c5426634e7929541eC2318f3dCF7e
 MIN_PAYMENT_AMOUNT=0.2
-X402_API_KEY=your_x402_api_key
-X402_FACILITATOR_URL=https://api.x402.io
 POLYMARKET_API_URL=https://gamma-api.polymarket.com/markets
 FRONTEND_URL=https://your-frontend.vercel.app
 PORT=8000

@@ -54,12 +54,6 @@ USDC_CONTRACT_ADDRESS=0x036CbD53842c5426634e7929541eC2318f3dCF7e
 MIN_PAYMENT_AMOUNT=0.2
 ```
 
-### Thirdweb Facilitator (X402)
-```bash
-X402_API_KEY=your_x402_api_key
-X402_FACILITATOR_URL=https://api.x402.io
-```
-
 ### External APIs
 ```bash
 POLYMARKET_API_URL=https://gamma-api.polymarket.com/markets
@@ -166,8 +160,6 @@ Environment Variables:
 ├── OPENAI_API_KEY
 ├── RESEND_API_KEY
 ├── THIRDWEB_SECRET_KEY
-├── X402_API_KEY
-├── X402_FACILITATOR_URL
 ├── POLYMARKET_API_URL
 ├── BASE_RPC_URL
 ├── USDC_CONTRACT_ADDRESS
@@ -192,8 +184,8 @@ Environment Variables:
 
 ### Payment not working
 - Check `THIRDWEB_SECRET_KEY` is set
-- Verify `X402_API_KEY` and `X402_FACILITATOR_URL` are correct
-- Check wallet addresses are correct
+- Verify `NEXT_PUBLIC_THIRDWEB_CLIENT_ID` is set
+- Check wallet addresses are correct (`SERVER_WALLET_ADDRESS`)
 
 ### Email not sending
 - Verify `RESEND_API_KEY` is set

@@ -118,10 +118,6 @@ BASE_RPC_URL=https://sepolia.base.org
 USDC_CONTRACT_ADDRESS=0x036CbD53842c5426634e7929541eC2318f3dCF7e
 MIN_PAYMENT_AMOUNT=0.2
 
-# Thirdweb Facilitator (X402)
-X402_API_KEY=your_x402_api_key
-X402_FACILITATOR_URL=https://api.x402.io
-
 # External APIs
 POLYMARKET_API_URL=https://gamma-api.polymarket.com/markets
 

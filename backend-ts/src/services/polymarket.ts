@@ -42,19 +42,6 @@ export class PolymarketService {
     }
   }
 
-  async getMarketsByCategory(category: string): Promise<Market[]> {
-    try {
-      const response = await axios.get(
-        `${this.apiUrl}?category=${encodeURIComponent(category)}&active=true&closed=false&sortBy=updatedAt&sortOrder=desc&limit=200`
-      )
-      const markets = response.data || [] // API returns array directly
-      
-      return markets.map((market: any) => this.transformMarket(market))
-    } catch (error) {
-      console.error(`Error fetching markets for category ${category}:`, error)
-      return []
-    }
-  }
 
   async getActiveMarkets(limit: number = 20): Promise<Market[]> {
     try {
@@ -216,7 +203,6 @@ export class PolymarketService {
       closed: market.closed || false,
       created_at: market.createdAt || market.created_at_iso,
       updated_at: market.updatedAt || market.updated_at_iso,
-      url: marketUrl,
       raw_data: market
     }
   }
@@ -286,7 +272,7 @@ export class PolymarketService {
       const markets = response.data || []
       
       // Extract unique categories from markets
-      const categories = [...new Set(markets.map((market: any) => market.category).filter(Boolean))]
+      const categories = [...new Set(markets.map((market: any) => market.category).filter(Boolean))] as string[]
       
       if (categories.length > 0) {
         return categories.sort()
