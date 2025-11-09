@@ -2,8 +2,6 @@
 
 import { ConnectButton } from 'thirdweb/react'
 import { client, wallets } from '@/lib/thirdweb'
-import { Button } from '@/components/ui/button'
-import { Wallet, LogOut } from 'lucide-react'
 
 export function WalletConnect() {
   return (
@@ -23,7 +21,7 @@ export function WalletConnect() {
       }}
       connectButton={{
         label: "Connect",
-        className: "polycaster-gradient hover:opacity-90 text-white font-medium px-4 py-2 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg",
+        className: "polycaster-gradient hover:opacity-90 text-white font-medium px-3 sm:px-4 py-1.5 sm:py-2 text-sm sm:text-base rounded-lg transition-all duration-200 shadow-md hover:shadow-lg w-full sm:w-auto",
       }}
     />
   )
@@ -47,7 +45,7 @@ export function WalletConnectButton() {
       }}
       connectButton={{
         label: "Connect",
-        className: "polycaster-gradient hover:opacity-90 text-white font-medium px-6 py-2 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg flex items-center space-x-2",
+        className: "polycaster-gradient hover:opacity-90 text-white font-medium px-4 sm:px-5 md:px-6 py-2 sm:py-2.5 text-sm sm:text-base rounded-lg transition-all duration-200 shadow-md hover:shadow-lg flex items-center justify-center space-x-2 w-full sm:w-auto",
       }}
     />
   )
@@ -71,7 +69,7 @@ export function WalletConnectCompact() {
       }}
       connectButton={{
         label: "",
-        className: "polycaster-gradient hover:opacity-90 text-white font-medium px-3 py-2 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg",
+        className: "polycaster-gradient hover:opacity-90 text-white font-medium px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg",
       }}
     />
   )

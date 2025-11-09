@@ -25,7 +25,7 @@ export function useAlerts(status?: 'active' | 'triggered' | 'cancelled') {
       } else {
         setError(result.error || 'Failed to fetch alerts')
       }
-    } catch (err) {
+    } catch {
       setError('Failed to fetch alerts')
     } finally {
       setLoading(false)
@@ -68,7 +68,7 @@ export function useAlerts(status?: 'active' | 'triggered' | 'cancelled') {
         setError(result.error || 'Failed to create alert')
         return { success: false, error: result.error }
       }
-    } catch (err) {
+    } catch {
       const errorMsg = 'Failed to create alert'
       setError(errorMsg)
       return { success: false, error: errorMsg }
@@ -96,7 +96,7 @@ export function useAlerts(status?: 'active' | 'triggered' | 'cancelled') {
         setError(result.error || 'Failed to delete alert')
         return { success: false }
       }
-    } catch (err) {
+    } catch {
       setError('Failed to delete alert')
       return { success: false }
     } finally {
@@ -127,7 +127,7 @@ export function useAlerts(status?: 'active' | 'triggered' | 'cancelled') {
         setError(result.error || 'Failed to update alert')
         return { success: false }
       }
-    } catch (err) {
+    } catch {
       setError('Failed to update alert')
       return { success: false }
     } finally {

@@ -25,7 +25,7 @@ export function useWatchlist() {
       } else {
         setError(result.error || 'Failed to fetch watchlist')
       }
-    } catch (err) {
+    } catch {
       setError('Failed to fetch watchlist')
     } finally {
       setLoading(false)
@@ -68,7 +68,7 @@ export function useWatchlist() {
         setError(result.error || 'Failed to add to watchlist')
         return { success: false, error: result.error }
       }
-    } catch (err) {
+    } catch {
       const errorMsg = 'Failed to add to watchlist'
       setError(errorMsg)
       return { success: false, error: errorMsg }
@@ -96,7 +96,7 @@ export function useWatchlist() {
         setError(result.error || 'Failed to remove from watchlist')
         return { success: false }
       }
-    } catch (err) {
+    } catch {
       setError('Failed to remove from watchlist')
       return { success: false }
     } finally {
@@ -130,7 +130,7 @@ export function useWatchlist() {
         setError(result.error || 'Failed to update watchlist item')
         return { success: false }
       }
-    } catch (err) {
+    } catch {
       setError('Failed to update watchlist item')
       return { success: false }
     } finally {

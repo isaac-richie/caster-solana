@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { marketApi, signalApi, paymentApi } from '@/lib/api'
-import { Market, Signal, MarketAnalysis, MarketFilters } from '@/types'
+import { MarketFilters } from '@/types'
 
 // Custom hook for markets data
 export function useMarkets(filters?: MarketFilters) {
@@ -57,7 +57,7 @@ export function useMarketFilters() {
     volumeMax: undefined,
   })
 
-  const updateFilter = useCallback((key: keyof MarketFilters, value: any) => {
+  const updateFilter = useCallback((key: keyof MarketFilters, value: string | number | undefined) => {
     setFilters(prev => ({ ...prev, [key]: value }))
   }, [])
 

@@ -27,8 +27,8 @@ import { ThemeToggle } from '@/components/ui/theme-toggle'
 import { MARKET_CATEGORIES, SORT_OPTIONS } from '@/lib/constants'
 import { cn } from '@/lib/utils'
 import { useAlertNotifications } from '@/hooks/useAlertNotifications'
-import { useOnboarding } from '@/components/onboarding/OnboardingProvider'
-import { HelpButton } from '@/components/onboarding/HelpButton'
+// import { useOnboarding } from '@/components/onboarding/OnboardingProvider'
+// import { HelpButton } from '@/components/onboarding/HelpButton'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -75,8 +75,8 @@ export function MarketHeader({
   } | null>(null)
   const { triggeredCount } = useAlertNotifications()
   
-  // Onboarding - always call hook (hooks must be called unconditionally)
-  const onboardingContext = useOnboarding()
+  // Onboarding - deactivated
+  // const onboardingContext = useOnboarding()
 
   const proFeatures = [
     {
@@ -159,18 +159,18 @@ export function MarketHeader({
     >
       <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8">
         {/* Main Header */}
-        <div className="flex items-center justify-between h-14 sm:h-16 gap-2">
+        <div className="flex items-center justify-between h-12 sm:h-14 md:h-16 gap-1.5 sm:gap-2">
           {/* Logo and Brand */}
-          <div className="flex items-center space-x-2 sm:space-x-4 flex-shrink-0">
-            <div className="flex items-center space-x-2 sm:space-x-3">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 polycaster-gradient rounded-lg flex items-center justify-center shadow-lg border-2 border-white/20">
+          <div className="flex items-center space-x-1.5 sm:space-x-2 md:space-x-4 flex-shrink-0 min-w-0">
+            <div className="flex items-center space-x-1.5 sm:space-x-2 md:space-x-3 min-w-0">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 polycaster-gradient rounded-lg flex items-center justify-center shadow-lg border-2 border-white/20 flex-shrink-0">
                 <RobotLogo size="md" animated={true} className="drop-shadow-lg" />
               </div>
-              <div className="hidden sm:block">
-                <h1 className="text-lg sm:text-xl font-bold text-white drop-shadow-md">
+              <div className="hidden xs:block min-w-0">
+                <h1 className="text-sm sm:text-base md:text-lg lg:text-xl font-bold text-white drop-shadow-md truncate">
                   PolyCaster
                 </h1>
-                <p className="text-xs text-blue-200 font-medium hidden lg:block">
+                <p className="text-[10px] sm:text-xs text-blue-200 font-medium hidden md:block lg:block">
                   AI-Powered Prediction Markets
                 </p>
               </div>
@@ -196,9 +196,9 @@ export function MarketHeader({
             variant="ghost"
             size="sm"
             onClick={() => setShowMobileSearch(!showMobileSearch)}
-            className="md:hidden text-white hover:bg-white/10 p-2"
+            className="md:hidden text-white hover:bg-white/10 p-1.5 sm:p-2 flex-shrink-0"
           >
-            <Search className="w-5 h-5" />
+            <Search className="w-4 h-4 sm:w-5 sm:h-5" />
           </Button>
 
           {/* Navigation Buttons - Desktop */}
@@ -284,24 +284,26 @@ export function MarketHeader({
             </DropdownMenu>
 
             <ThemeToggle />
-            {onboardingContext && (
+            {/* {onboardingContext && (
               <HelpButton onStartTour={onboardingContext.startTour} />
-            )}
+            )} */}
             <div className="hidden xl:block" data-onboarding="wallet">
               <WalletConnectButton />
             </div>
           </div>
 
           {/* Mobile Menu Button */}
-          <div className="flex items-center space-x-2 lg:hidden">
-            <ThemeToggle />
+          <div className="flex items-center space-x-1 sm:space-x-2 lg:hidden flex-shrink-0">
+            <div className="hidden sm:block">
+              <ThemeToggle />
+            </div>
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setShowMobileMenu(!showMobileMenu)}
-              className="text-white hover:bg-white/10 p-2"
+              className="text-white hover:bg-white/10 p-1.5 sm:p-2"
             >
-              {showMobileMenu ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              {showMobileMenu ? <X className="w-4 h-4 sm:w-5 sm:h-5" /> : <Menu className="w-4 h-4 sm:w-5 sm:h-5" />}
             </Button>
           </div>
         </div>
@@ -312,16 +314,16 @@ export function MarketHeader({
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="md:hidden pb-3"
+            className="md:hidden pb-2 sm:pb-3 px-2 sm:px-0"
           >
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Search className="absolute left-2 sm:left-3 top-1/2 transform -translate-y-1/2 w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400" />
               <Input
                 type="text"
                 placeholder="Search markets..."
                 value={searchTerm}
                 onChange={(e) => onSearchChange(e.target.value)}
-                className="pl-10 bg-white/90 dark:bg-gray-800/90 border-gray-200 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="pl-8 sm:pl-10 pr-3 py-2 sm:py-2.5 text-sm sm:text-base bg-white/90 dark:bg-gray-800/90 border-gray-200 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
           </motion.div>
@@ -333,9 +335,13 @@ export function MarketHeader({
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="lg:hidden border-t border-white/10 py-3"
+            className="lg:hidden border-t border-white/10 py-2 sm:py-3 max-h-[calc(100vh-200px)] overflow-y-auto"
           >
-            <div className="flex flex-col space-y-2">
+            <div className="flex flex-col space-y-1.5 sm:space-y-2">
+              {/* Theme Toggle for Mobile - Show in menu */}
+              <div className="sm:hidden px-2 py-1.5 border-b border-white/10">
+                <ThemeToggle />
+              </div>
               <Link href="/help" onClick={() => setShowMobileMenu(false)}>
                 <Button
                   variant="ghost"
@@ -402,42 +408,44 @@ export function MarketHeader({
                 })}
               </div>
 
-              <div className="pt-2 border-t border-white/10">
-                <WalletConnectButton />
+              <div className="pt-2 border-t border-white/10 px-2">
+                <div className="w-full">
+                  <WalletConnectButton />
+                </div>
               </div>
             </div>
           </motion.div>
         )}
 
         {/* Market Stats */}
-        <div className="py-3 sm:py-4 border-t border-white/10">
-          <div className="grid grid-cols-3 gap-2 sm:gap-4">
-            <div className="text-center">
-              <div className="text-lg sm:text-xl lg:text-2xl font-bold text-white">
+        <div className="py-2 sm:py-3 md:py-4 border-t border-white/10">
+          <div className="grid grid-cols-3 gap-1.5 sm:gap-2 md:gap-4">
+            <div className="text-center px-1 sm:px-0">
+              <div className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-white">
                 {marketStats.totalMarkets.toLocaleString()}
               </div>
-              <div className="text-xs sm:text-sm text-white/80">Total Markets</div>
+              <div className="text-[10px] sm:text-xs md:text-sm text-white/80 leading-tight">Total Markets</div>
             </div>
-            <div className="text-center">
-              <div className="text-lg sm:text-xl lg:text-2xl font-bold text-white">
+            <div className="text-center px-1 sm:px-0">
+              <div className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-white">
                 {marketStats.activeMarkets.toLocaleString()}
               </div>
-              <div className="text-xs sm:text-sm text-white/80">Active Markets</div>
+              <div className="text-[10px] sm:text-xs md:text-sm text-white/80 leading-tight">Active Markets</div>
             </div>
-            <div className="text-center">
-              <div className="text-lg sm:text-xl lg:text-2xl font-bold text-white">
+            <div className="text-center px-1 sm:px-0">
+              <div className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-white">
                 {marketStats.trendingMarkets.toLocaleString()}
               </div>
-              <div className="text-xs sm:text-sm text-white/80">Trending</div>
+              <div className="text-[10px] sm:text-xs md:text-sm text-white/80 leading-tight">Trending</div>
             </div>
           </div>
         </div>
 
         {/* Filters and Categories */}
-        <div className="py-3 sm:py-4 border-t border-white/10">
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+        <div className="py-2 sm:py-3 md:py-4 border-t border-white/10">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 sm:gap-3">
             {/* Category Filters */}
-            <div className="flex items-center space-x-2 overflow-x-auto pb-2 -mx-2 px-2 scrollbar-hide" data-onboarding="categories">
+            <div className="flex items-center space-x-1.5 sm:space-x-2 overflow-x-auto pb-1.5 sm:pb-2 -mx-2 px-2 scrollbar-hide" data-onboarding="categories">
               {MARKET_CATEGORIES.map((category) => (
                 <Button
                   key={category}
@@ -445,7 +453,7 @@ export function MarketHeader({
                   size="sm"
                   onClick={() => onCategoryChange(category)}
                   className={cn(
-                    "whitespace-nowrap transition-all duration-200 text-xs sm:text-sm",
+                    "whitespace-nowrap transition-all duration-200 text-[10px] sm:text-xs md:text-sm px-2 sm:px-3 py-1 sm:py-1.5 flex-shrink-0",
                     selectedCategory === category
                       ? "polymarket-gradient text-white shadow-md"
                       : "bg-white/10 text-white border-white/20 hover:bg-white/20"
@@ -457,11 +465,11 @@ export function MarketHeader({
             </div>
 
             {/* Sort Controls */}
-            <div className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
+            <div className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0 justify-end sm:justify-start">
               <select
                 value={sortBy}
                 onChange={(e) => onSortChange(e.target.value)}
-                className="bg-white/10 text-white border-white/20 rounded-md px-2 sm:px-3 py-1 text-xs sm:text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="bg-white/10 text-white border-white/20 rounded-md px-1.5 sm:px-2 md:px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs md:text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent min-w-[100px] sm:min-w-[120px]"
               >
                 {SORT_OPTIONS.map((option) => (
                   <option key={option.value} value={option.value} className="bg-gray-800 text-white">
@@ -474,9 +482,9 @@ export function MarketHeader({
                 variant="outline"
                 size="sm"
                 onClick={() => onSortOrderChange(sortOrder === 'asc' ? 'desc' : 'asc')}
-                className="bg-white/10 text-white border-white/20 hover:bg-white/20 p-1.5 sm:p-2"
+                className="bg-white/10 text-white border-white/20 hover:bg-white/20 p-1 sm:p-1.5 md:p-2 h-auto"
               >
-                <ArrowUpDown className="w-3 h-3 sm:w-4 sm:h-4" />
+                <ArrowUpDown className="w-3 h-3 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4" />
               </Button>
             </div>
           </div>

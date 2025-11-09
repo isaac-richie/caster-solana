@@ -105,7 +105,10 @@ export function ROICalculator({ market, onClose }: ROICalculatorProps) {
   }, [investmentAmount, position, market])
 
   useEffect(() => {
-    calculateROI()
+    // Use setTimeout to avoid synchronous setState in effect
+    setTimeout(() => {
+      calculateROI()
+    }, 0)
   }, [calculateROI])
 
 

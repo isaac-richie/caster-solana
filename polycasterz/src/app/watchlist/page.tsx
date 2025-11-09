@@ -1,14 +1,13 @@
 'use client'
 
-import { useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { useWatchlist } from '@/hooks/useWatchlist'
 import { useActiveAccount } from 'thirdweb/react'
-import { Star, Loader2, Trash2, ExternalLink, TrendingUp, TrendingDown, RefreshCw } from 'lucide-react'
-import { formatPrice, formatVolume, formatTimeRemaining } from '@/lib/utils'
+import { Star, Loader2, Trash2, ExternalLink, RefreshCw } from 'lucide-react'
+import { formatPrice } from '@/lib/utils'
 import Link from 'next/link'
 
 export default function WatchlistPage() {

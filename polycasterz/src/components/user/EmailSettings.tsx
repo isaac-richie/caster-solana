@@ -1,13 +1,13 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useActiveAccount } from 'thirdweb/react'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Label } from '@/components/ui/label'
-import { Mail, CheckCircle2, XCircle, Loader2, AlertCircle } from 'lucide-react'
+import { Mail, CheckCircle2, Loader2, AlertCircle } from 'lucide-react'
 import { updateUserEmail, getUser, type User } from '@/lib/api/users'
 import { useToast } from '@/components/ui/toast'
 
@@ -27,14 +27,7 @@ export function EmailSettings({ isOpen, onClose }: EmailSettingsProps) {
 
   const walletAddress = account?.address
 
-  // Fetch user data when modal opens
-  useEffect(() => {
-    if (isOpen && walletAddress) {
-      fetchUser()
-    }
-  }, [isOpen, walletAddress])
-
-  const fetchUser = async () => {
+  const fetchUser = useCallback(async () => {
     if (!walletAddress) return
 
     setLoading(true)
@@ -49,7 +42,14 @@ export function EmailSettings({ isOpen, onClose }: EmailSettingsProps) {
     } finally {
       setLoading(false)
     }
-  }
+  }, [walletAddress])
+
+  // Fetch user data when modal opens
+  useEffect(() => {
+    if (isOpen && walletAddress) {
+      fetchUser()
+    }
+  }, [isOpen, walletAddress, fetchUser])
 
   const handleSaveEmail = async () => {
     if (!walletAddress) {
@@ -192,7 +192,7 @@ export function EmailSettings({ isOpen, onClose }: EmailSettingsProps) {
                 disabled={saving}
               />
               <p className="text-xs text-gray-500 dark:text-gray-400">
-                We'll send price alert notifications to this email
+                We&apos;ll send price alert notifications to this email
               </p>
             </div>
 

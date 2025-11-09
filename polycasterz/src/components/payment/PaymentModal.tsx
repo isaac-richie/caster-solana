@@ -6,7 +6,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
-import { Separator } from '@/components/ui/separator'
 import { 
   X, 
   CreditCard, 
@@ -23,7 +22,7 @@ interface PaymentModalProps {
   isOpen: boolean
   onClose: () => void
   market: Market | null
-  onPaymentSuccess?: (paymentData: any) => void
+  onPaymentSuccess?: (paymentData: { transactionHash?: string; paymentId?: string }) => void
 }
 
 export function PaymentModal({ 

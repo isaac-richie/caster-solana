@@ -1,6 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
+import { useMemo } from 'react'
 
 interface RobotLogoProps {
   size?: 'sm' | 'md' | 'lg' | 'xl'
@@ -8,15 +9,15 @@ interface RobotLogoProps {
   animated?: boolean
 }
 
-export function RobotLogo({ size = 'md', className = '', animated = false }: RobotLogoProps) {
-  const sizeClasses = {
-    sm: 'w-6 h-6',
-    md: 'w-8 h-8',
-    lg: 'w-12 h-12',
-    xl: 'w-16 h-16'
-  }
+const sizeClasses = {
+  sm: 'w-6 h-6',
+  md: 'w-8 h-8',
+  lg: 'w-12 h-12',
+  xl: 'w-16 h-16'
+} as const
 
-  const RobotIcon = () => (
+export function RobotLogo({ size = 'md', className = '', animated = false }: RobotLogoProps) {
+  const RobotIcon = useMemo(() => (
     <svg
       viewBox="0 0 24 24"
       fill="none"
@@ -145,7 +146,7 @@ export function RobotLogo({ size = 'md', className = '', animated = false }: Rob
         className="text-white"
       />
     </svg>
-  )
+  ), [size, className])
 
   if (animated) {
     return (
@@ -156,12 +157,12 @@ export function RobotLogo({ size = 'md', className = '', animated = false }: Rob
         whileHover={{ scale: 1.1 }}
         className="inline-block"
       >
-        <RobotIcon />
+        {RobotIcon}
       </motion.div>
     )
   }
 
-  return <RobotIcon />
+  return RobotIcon
 }
 
 export default RobotLogo

@@ -1,7 +1,6 @@
 'use client'
 
 import { useActiveAccount, useActiveWallet } from 'thirdweb/react'
-import { client } from '@/lib/thirdweb'
 import { useState, useEffect } from 'react'
 
 export function useWallet() {
@@ -11,13 +10,16 @@ export function useWallet() {
   const [address, setAddress] = useState<string | null>(null)
 
   useEffect(() => {
-    if (account) {
-      setIsConnected(true)
-      setAddress(account.address)
-    } else {
-      setIsConnected(false)
-      setAddress(null)
-    }
+    // Use setTimeout to avoid synchronous setState in effect
+    setTimeout(() => {
+      if (account) {
+        setIsConnected(true)
+        setAddress(account.address)
+      } else {
+        setIsConnected(false)
+        setAddress(null)
+      }
+    }, 0)
   }, [account])
 
   const connect = async () => {

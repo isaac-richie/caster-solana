@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback, useRef } from 'react'
+import { useEffect, useState, useCallback, useRef, useMemo } from 'react'
 import { createPortal } from 'react-dom'
 import { X, ChevronRight, ChevronLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -23,7 +23,7 @@ export function OnboardingTour({ onComplete }: OnboardingTourProps) {
   const [targetElement, setTargetElement] = useState<HTMLElement | null>(null)
   const tooltipRef = useRef<HTMLDivElement>(null)
 
-  const steps: Step[] = [
+  const steps: Step[] = useMemo(() => [
     {
       target: 'body',
       title: 'Welcome to PolyCaster! 👋',
@@ -72,13 +72,11 @@ export function OnboardingTour({ onComplete }: OnboardingTourProps) {
       content: 'Connect your wallet or use email login to access all features. Save markets, set alerts, and track your activity.',
       placement: 'left',
     },
-  ]
+  ], [])
 
   const calculateTooltipPosition = useCallback((element: HTMLElement, placement: string) => {
     if (!element || !tooltipRef.current) return { top: 0, left: 0 }
 
-    const tooltip = tooltipRef.current
-    const tooltipRect = tooltip.getBoundingClientRect()
     const elementRect = element.getBoundingClientRect()
     const viewportWidth = window.innerWidth
     const viewportHeight = window.innerHeight
@@ -197,7 +195,10 @@ export function OnboardingTour({ onComplete }: OnboardingTourProps) {
   }, [currentStep, steps, calculateTooltipPosition, handleComplete])
 
   useEffect(() => {
-    updateStep()
+    // Use setTimeout to avoid synchronous setState in effect
+    setTimeout(() => {
+      updateStep()
+    }, 0)
     
     const handleResize = () => {
       if (targetElement) {

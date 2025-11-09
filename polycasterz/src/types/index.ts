@@ -17,7 +17,7 @@ export interface Market {
   created_at?: string
   updated_at?: string
   url?: string
-  raw_data: any
+  raw_data: Record<string, unknown>
 }
 
 export interface Signal {
@@ -42,7 +42,7 @@ export interface User {
   is_active: boolean
   total_signals_purchased: number
   total_spent: number
-  metadata: any
+  metadata: Record<string, unknown>
   telegram_id?: string
   username?: string
 }

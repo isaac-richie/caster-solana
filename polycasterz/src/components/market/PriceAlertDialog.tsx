@@ -8,7 +8,6 @@ import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Bell, TrendingUp, TrendingDown, Target } from 'lucide-react'
 import { Market } from '@/types'
-import { formatPrice } from '@/lib/utils'
 import { useAlerts } from '@/hooks/useAlerts'
 import { useActiveAccount } from 'thirdweb/react'
 

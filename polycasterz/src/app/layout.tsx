@@ -5,7 +5,7 @@ import { Providers } from "@/components/providers";
 import { ThirdwebProvider } from "thirdweb/react";
 import { ThemeProvider } from "@/components/theme-provider";
 import { AlertNotificationProvider } from "@/components/alert-notification-provider";
-import { OnboardingProvider } from "@/components/onboarding/OnboardingProvider";
+// import { OnboardingProvider } from "@/components/onboarding/OnboardingProvider";
 import { Footer } from "@/components/layout/Footer";
 
 const geistSans = Geist({
@@ -42,13 +42,13 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <ThirdwebProvider>
-            <Providers>
-              <AlertNotificationProvider>
-                  <OnboardingProvider>
+            <ThirdwebProvider>
+              <Providers>
+                <AlertNotificationProvider>
+                  {/* <OnboardingProvider> */}
                     {children}
                     <Footer />
-                  </OnboardingProvider>
+                  {/* </OnboardingProvider> */}
                 </AlertNotificationProvider>
               </Providers>
             </ThirdwebProvider>

@@ -17,8 +17,11 @@ function VerifyEmailContent() {
     const token = searchParams.get('token')
 
     if (!token) {
-      setStatus('error')
-      setMessage('No verification token provided')
+      // Use setTimeout to avoid synchronous setState in effect
+      setTimeout(() => {
+        setStatus('error')
+        setMessage('No verification token provided')
+      }, 0)
       return
     }
 
