@@ -23,15 +23,35 @@ const allowedOrigins = [
   'http://localhost:3001',
 ].filter(Boolean) // Remove undefined values
 
+// Check if FRONTEND_URL is a placeholder (not yet configured)
+const isPlaceholder = process.env.FRONTEND_URL?.includes('your-frontend') || 
+                      process.env.FRONTEND_URL?.includes('your-actual-frontend')
+
 app.use(cors({
   origin: function (origin, callback) {
     // Allow requests with no origin (mobile apps, Postman, curl, etc.)
     if (!origin) return callback(null, true)
     
-    if (allowedOrigins.length === 0 || allowedOrigins.indexOf(origin) !== -1) {
+    // If FRONTEND_URL is not set or is a placeholder, allow all origins (for initial setup)
+    // This allows frontend to connect before FRONTEND_URL is properly configured
+    if (allowedOrigins.length === 0 || isPlaceholder) {
+      if (process.env.NODE_ENV === 'production') {
+        console.warn(`⚠️  WARNING: FRONTEND_URL not configured - allowing origin: ${origin}`)
+        console.warn(`⚠️  Set FRONTEND_URL in environment variables and redeploy for security`)
+      }
+      return callback(null, true)
+    }
+    
+    // Check if origin is in allowed list
+    if (allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true)
     } else {
       console.warn(`⚠️  CORS blocked origin: ${origin}`)
+      console.warn(`⚠️  Allowed origins: ${allowedOrigins.join(', ')}`)
+      // In development, be more permissive
+      if (process.env.NODE_ENV !== 'production') {
+        return callback(null, true)
+      }
       callback(new Error('Not allowed by CORS'))
     }
   },
@@ -40,9 +60,9 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }))
 
-if (process.env.NODE_ENV === 'production' && allowedOrigins.length === 0) {
-  console.warn('⚠️  WARNING: FRONTEND_URL not set - CORS allows all origins (INSECURE)')
-  console.warn('⚠️  Set FRONTEND_URL in environment variables for production')
+if (process.env.NODE_ENV === 'production' && (allowedOrigins.length === 0 || isPlaceholder)) {
+  console.warn('⚠️  WARNING: FRONTEND_URL not properly configured - CORS allows all origins (INSECURE)')
+  console.warn('⚠️  Set FRONTEND_URL to your actual frontend URL in environment variables for security')
 }
 
 app.use(express.json())
@@ -1228,14 +1248,12 @@ app.use('*', (req, res) => {
 })
 
 // Export app for Vercel serverless functions
-// Vercel's @vercel/node builder expects a handler function
-const handler = app
-
+// Vercel's @vercel/node builder expects the Express app directly
 // Export as CommonJS (required for TypeScript compilation to CommonJS)
-module.exports = handler
+module.exports = app
 
 // Also export as ES module for compatibility
-export default handler
+export default app
 
 // Start server locally (only if not in Vercel environment)
 if (process.env.VERCEL !== '1' && process.env.NODE_ENV !== 'production') {
@@ -1248,15 +1266,13 @@ if (process.env.VERCEL !== '1' && process.env.NODE_ENV !== 'production') {
     console.log(`🤖 AI Analysis: ${baseUrl}/ai/analyze/:marketId`)
     console.log(`🔔 Alerts: ${baseUrl}/alerts`)
     
-    // Start alert checker service
+    // Start alert checker service (only in local development)
     alertCheckerService.start()
     console.log(`🔔 Alert checker service started (checks every 30s)`)
   })
 } else {
-  // In Vercel/production, start alert checker on module load
-  // Note: This may not work in serverless, consider using a separate service
-  if (process.env.VERCEL !== '1') {
-    alertCheckerService.start()
-    console.log(`🔔 Alert checker service started (checks every 30s)`)
-  }
+  // In Vercel/serverless, don't start alert checker
+  // Serverless functions are stateless and shouldn't run background services
+  console.log(`🚀 PolyCaster backend running on Vercel (serverless mode)`)
+  console.log(`⚠️  Alert checker service disabled in serverless environment`)
 }
