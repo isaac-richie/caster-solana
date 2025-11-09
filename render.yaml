@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: polycaster-backend
+    env: node
+    region: oregon
+    plan: starter
+    buildCommand: cd backend-ts && npm install && npm run build
+    startCommand: cd backend-ts && npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      # Note: Add sensitive environment variables in Render dashboard
+      # They should not be committed to git

@@ -2,46 +2,89 @@
 
 ## 📦 Project Structure
 
-You have **two separate projects** to deploy:
+You have **two separate projects** in one repository:
 
 1. **Frontend (Next.js)**: `polycasterz/`
 2. **Backend API (Express)**: `backend-ts/`
+
+**Important**: You need to create **TWO separate Vercel projects** - one for each directory.
 
 ---
 
 ## 🚀 Deployment Steps
 
-### 1. Deploy Backend API First
+### Step 1: Deploy Backend API First
 
-1. Go to [Vercel Dashboard](https://vercel.com/dashboard)
-2. Click **"Add New Project"**
-3. Import your GitHub repository
-4. Configure:
-   - **Root Directory**: `backend-ts`
-   - **Framework Preset**: Other
+1. **Go to Vercel Dashboard**
+   - Visit [vercel.com/dashboard](https://vercel.com/dashboard)
+   - Click **"Add New Project"**
+
+2. **Import Repository**
+   - Select your GitHub repository: `isaac-richie/casterz`
+   - Click **"Import"**
+
+3. **Configure Backend Project**
+   - **Project Name**: `polycaster-backend` (or your choice)
+   - **Root Directory**: ⚠️ **IMPORTANT** - Click "Edit" and set to `backend-ts`
+   - **Framework Preset**: Select **"Other"**
    - **Build Command**: `npm run build`
-   - **Output Directory**: `dist` (or leave empty if using `vercel.json`)
+   - **Output Directory**: Leave empty (or `dist`)
    - **Install Command**: `npm install`
    - **Development Command**: `npm run dev`
 
-5. Add **Environment Variables** (see below)
+4. **Add Environment Variables**
+   - Click **"Environment Variables"** before deploying
+   - Add all backend variables (see `ENV_VARIABLES_COPY.txt`)
+   - Set environment to **"Production"**
 
-6. Deploy!
+5. **Deploy**
+   - Click **"Deploy"**
+   - Wait for completion
+   - **Copy the deployment URL** (e.g., `https://polycaster-backend.vercel.app`)
 
-### 2. Deploy Frontend
+### Step 2: Deploy Frontend
 
-1. Add another project in Vercel
-2. Configure:
-   - **Root Directory**: `polycasterz`
-   - **Framework Preset**: Next.js (auto-detected)
+1. **Add Another Project**
+   - In Vercel Dashboard, click **"Add New Project"** again
+   - Select the **same repository**: `isaac-richie/casterz`
+
+2. **Configure Frontend Project**
+   - **Project Name**: `polycaster-frontend` (or your choice)
+   - **Root Directory**: ⚠️ **IMPORTANT** - Click "Edit" and set to `polycasterz`
+   - **Framework Preset**: **"Next.js"** (auto-detected)
    - **Build Command**: `npm run build` (auto)
    - **Output Directory**: `.next` (auto)
-   - **Install Command**: `npm install`
+   - **Install Command**: `npm install` (auto)
 
-3. Add **Environment Variables** (see below)
-4. **Important**: Set `NEXT_PUBLIC_API_URL` to your backend URL
+3. **Add Environment Variables**
+   - Click **"Environment Variables"**
+   - Add frontend variables:
+     ```
+     NEXT_PUBLIC_API_URL=https://polycaster-backend.vercel.app
+     NEXT_PUBLIC_THIRDWEB_CLIENT_ID=your_thirdweb_client_id
+     NEXT_PUBLIC_SERVER_WALLET=0x2983D066D42a79295dFAC0F752EA2FA7940C33dA
+     ```
+   - **Replace** `https://polycaster-backend.vercel.app` with your actual backend URL from Step 1
 
-5. Deploy!
+4. **Deploy**
+   - Click **"Deploy"**
+   - Wait for completion
+   - **Copy the deployment URL** (e.g., `https://polycaster-frontend.vercel.app`)
+
+### Step 3: Update Backend with Frontend URL
+
+1. **Go back to Backend Project**
+   - Open backend project in Vercel
+   - Go to **Settings → Environment Variables**
+
+2. **Update FRONTEND_URL**
+   - Find `FRONTEND_URL`
+   - Update to: `https://polycaster-frontend.vercel.app`
+   - Save
+
+3. **Redeploy Backend**
+   - Go to **Deployments** tab
+   - Click **"Redeploy"** on latest deployment
 
 ---
 
