@@ -13,7 +13,6 @@ export function WalletTest() {
     connected, 
     connecting, 
     wallets,
-    adapter,
     disconnect
   } = useWallet()
   const { setVisible } = useWalletModal()
@@ -24,7 +23,15 @@ export function WalletTest() {
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const checkPhantom = () => {
-        const phantom = (window as Record<string, unknown> & { phantom?: { solana?: unknown } }).phantom?.solana
+        const phantom = (window as unknown as Record<string, unknown> & { 
+          phantom?: { 
+            solana?: {
+              isPhantom?: boolean
+              publicKey?: { toString: () => string }
+              isConnected?: boolean
+            }
+          } 
+        }).phantom?.solana
         setPhantomDetected(!!phantom)
         if (phantom) {
           setWalletInfo({
@@ -51,9 +58,9 @@ export function WalletTest() {
       connected,
       connecting,
       wallets: wallets.map(w => ({ name: w.adapter.name, readyState: w.readyState })),
-      adapter: adapter?.name
+      adapter: wallet?.adapter?.name
     })
-  }, [wallet, publicKey, connected, connecting, wallets, adapter])
+  }, [wallet, publicKey, connected, connecting, wallets])
 
   const handleConnect = () => {
     // Just open the modal - let user select and approve connection
@@ -74,7 +81,7 @@ export function WalletTest() {
           {walletInfo && (
             <div className="mt-2 text-sm">
               <p>isPhantom: {walletInfo.isPhantom ? '✅' : '❌'}</p>
-              <p>Public Key: {walletInfo.publicKey || 'Not available'}</p>
+              <p>Public Key: {String(walletInfo.publicKey || 'Not available')}</p>
               <p>Is Connected: {walletInfo.isConnected ? '✅' : '❌'}</p>
             </div>
           )}
@@ -88,7 +95,7 @@ export function WalletTest() {
             <p>Public Key: {publicKey?.toString() || 'None'}</p>
             <p>Connected: {connected ? '✅' : '❌'}</p>
             <p>Connecting: {connecting ? '⏳' : '❌'}</p>
-            <p>Adapter: {adapter?.name || 'None'}</p>
+            <p>Adapter: {wallet?.adapter?.name || 'None'}</p>
           </div>
         </div>
 
@@ -125,7 +132,7 @@ export function WalletTest() {
           <h3 className="font-semibold mb-2">Debug Info</h3>
           <pre className="text-xs overflow-auto">
             {JSON.stringify({
-              windowPhantom: !!((window as Record<string, unknown> & { phantom?: { solana?: unknown } }).phantom?.solana),
+              windowPhantom: !!((window as unknown as Record<string, unknown> & { phantom?: { solana?: unknown } }).phantom?.solana),
               walletsCount: wallets.length,
               walletNames: wallets.map(w => w.adapter.name),
               currentWallet: wallet?.adapter?.name,
