@@ -1,180 +1,225 @@
-# Backend Environment Variables for Vercel Deployment
+# 🔐 Backend Environment Variables for Deployment
 
-## 🔒 BACKEND API - Server Variables Only
-
-These are **server-side only** (NOT exposed to browser). Add these to your **Backend Project** in Vercel.
+Complete list of all environment variables required for backend deployment on Vercel.
 
 ---
 
-## 📋 Complete List (17 variables)
+## 📋 Required Environment Variables
 
-### Database (Supabase) - REQUIRED
-```bash
-SUPABASE_URL=https://jejfuksuzmsvqmgweopi.supabase.co
-SUPABASE_KEY=your_supabase_anon_key
-SUPABASE_SERVICE_KEY=your_supabase_service_role_key
-```
+### 🌐 **Core Configuration**
 
-### AI Service (OpenAI) - REQUIRED
-```bash
-OPENAI_API_KEY=sk-proj-...
+| Variable | Required | Description | Example |
+|----------|----------|-------------|---------|
+| `NODE_ENV` | ✅ Yes | Environment mode | `production` |
+| `PORT` | ⚠️ Optional | Server port (Vercel auto-assigns) | `8000` |
+| `FRONTEND_URL` | ✅ Yes | Frontend deployment URL (for CORS) | `https://your-frontend.vercel.app` |
+
+---
+
+### 🗄️ **Database (Supabase)**
+
+| Variable | Required | Description | Example |
+|----------|----------|-------------|---------|
+| `SUPABASE_URL` | ✅ Yes | Supabase project URL | `https://xxxxx.supabase.co` |
+| `SUPABASE_KEY` | ✅ Yes | Supabase anon/public key | `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...` |
+| `SUPABASE_SERVICE_KEY` | ✅ Yes | Supabase service role key (for admin operations) | `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...` |
+
+**Note:** `SUPABASE_SERVICE_KEY` takes precedence over `SUPABASE_KEY` if both are set.
+
+---
+
+### 🤖 **AI Service (OpenAI)**
+
+| Variable | Required | Description | Example |
+|----------|----------|-------------|---------|
+| `OPENAI_API_KEY` | ✅ Yes | OpenAI API key for AI analysis | `sk-proj-xxxxx...` |
+| `OPENAI_MODEL` | ⚠️ Optional | OpenAI model to use | `gpt-4o-mini` (default) |
+
+**Available Models:**
+- `gpt-4o-mini` (default, recommended)
+- `gpt-4o`
+- `gpt-3.5-turbo`
+- `gpt-5-nano` (experimental)
+
+---
+
+### 📧 **Email Service (Resend)**
+
+| Variable | Required | Description | Example |
+|----------|----------|-------------|---------|
+| `RESEND_API_KEY` | ✅ Yes | Resend API key for email notifications | `re_xxxxx...` |
+| `EMAIL_FROM` | ⚠️ Optional | Sender email address | `alerts@polycaster.com` |
+| `EMAIL_FROM_NAME` | ⚠️ Optional | Sender display name | `PolyCaster` |
+
+**Note:** For testing, use `onboarding@resend.dev` (pre-verified by Resend).
+
+---
+
+### 💳 **EVM Payment (Thirdweb - Base Sepolia)**
+
+| Variable | Required | Description | Example |
+|----------|----------|-------------|---------|
+| `NEXT_PUBLIC_THIRDWEB_CLIENT_ID` | ✅ Yes | Thirdweb client ID (public) | `your_client_id` |
+| `THIRDWEB_SECRET_KEY` | ✅ Yes | Thirdweb secret key (private) | `your_secret_key` |
+| `SERVER_WALLET_ADDRESS` | ✅ Yes | EVM wallet address to receive payments | `0x2983D066D42a79295dFAC0F752EA2FA7940C33dA` |
+| `BASE_RPC_URL` | ✅ Yes | Base Sepolia RPC endpoint | `https://sepolia.base.org` |
+| `USDC_CONTRACT_ADDRESS` | ⚠️ Optional | USDC contract on Base Sepolia | `0x036CbD53842c5426634e7929541eC2318f3dCF7e` (default) |
+| `PRIVATE_KEY` | ✅ Yes | Private key for server wallet (for signing) | `0x...` (keep secret!) |
+
+**Alternative Variable Names:**
+- `PAYMENT_RECIPIENT_WALLET` can be used instead of `SERVER_WALLET_ADDRESS`
+
+---
+
+### 🪙 **Solana Payment**
+
+| Variable | Required | Description | Example |
+|----------|----------|-------------|---------|
+| `SOLANA_SERVER_WALLET` | ✅ Yes | Solana wallet address to receive payments | `YourSolanaWalletAddress...` |
+| `SOLANA_RPC_URL` | ⚠️ Optional | Solana RPC endpoint | `https://api.mainnet-beta.solana.com` (default) |
+| `SOLANA_FACILITATOR_URL` | ⚠️ Optional | PayAI Facilitator URL | `https://facilitator.payai.network` (default) |
+| `SOLANA_PRIVATE_KEY` | ⚠️ Optional | Solana private key (base58 format) | `your_base58_private_key` |
+
+**Note:** If `SOLANA_SERVER_WALLET` is not set, Solana payments will be disabled.
+
+---
+
+### 📊 **Polymarket API**
+
+| Variable | Required | Description | Example |
+|----------|----------|-------------|---------|
+| `POLYMARKET_API_URL` | ⚠️ Optional | Polymarket API endpoint | `https://gamma-api.polymarket.com/markets` (default) |
+
+---
+
+## 📝 **Complete .env Example**
+
+```env
+# ============================================
+# Core Configuration
+# ============================================
+NODE_ENV=production
+PORT=8000
+FRONTEND_URL=https://your-frontend.vercel.app
+
+# ============================================
+# Database (Supabase)
+# ============================================
+SUPABASE_URL=https://xxxxx.supabase.co
+SUPABASE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+SUPABASE_SERVICE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+# ============================================
+# AI Service (OpenAI)
+# ============================================
+OPENAI_API_KEY=sk-proj-xxxxx...
 OPENAI_MODEL=gpt-4o-mini
-```
 
-### Email Service (Resend) - REQUIRED
-```bash
-RESEND_API_KEY=re_...
-EMAIL_FROM=onboarding@resend.dev
+# ============================================
+# Email Service (Resend)
+# ============================================
+RESEND_API_KEY=re_xxxxx...
+EMAIL_FROM=alerts@polycaster.com
 EMAIL_FROM_NAME=PolyCaster
-```
 
-### Payment & Blockchain (Base Sepolia) - REQUIRED
-```bash
-THIRDWEB_SECRET_KEY=your_thirdweb_secret_key
-NEXT_PUBLIC_THIRDWEB_CLIENT_ID=your_thirdweb_client_id
+# ============================================
+# EVM Payment (Thirdweb - Base Sepolia)
+# ============================================
+NEXT_PUBLIC_THIRDWEB_CLIENT_ID=your_client_id
+THIRDWEB_SECRET_KEY=your_secret_key
 SERVER_WALLET_ADDRESS=0x2983D066D42a79295dFAC0F752EA2FA7940C33dA
-PAYMENT_RECIPIENT_WALLET=0x2983D066D42a79295dFAC0F752EA2FA7940C33dA
 BASE_RPC_URL=https://sepolia.base.org
 USDC_CONTRACT_ADDRESS=0x036CbD53842c5426634e7929541eC2318f3dCF7e
-MIN_PAYMENT_AMOUNT=0.2
-```
+PRIVATE_KEY=0x...
 
-### External APIs - OPTIONAL (has defaults)
-```bash
+# ============================================
+# Solana Payment
+# ============================================
+SOLANA_SERVER_WALLET=YourSolanaWalletAddress...
+SOLANA_RPC_URL=https://api.mainnet-beta.solana.com
+SOLANA_FACILITATOR_URL=https://facilitator.payai.network
+SOLANA_PRIVATE_KEY=your_base58_private_key
+
+# ============================================
+# Polymarket API
+# ============================================
 POLYMARKET_API_URL=https://gamma-api.polymarket.com/markets
 ```
 
-### Server Configuration - REQUIRED
+---
+
+## 🚀 **Vercel Deployment Steps**
+
+### 1. **Add Environment Variables in Vercel**
+
+1. Go to your **Backend Project** → **Settings** → **Environment Variables**
+2. Add each variable from the list above
+3. Select **Production** environment (and optionally **Preview** and **Development**)
+
+### 2. **Important Notes**
+
+- ✅ **Never commit** `.env` files to Git
+- ✅ **Use Vercel Environment Variables** for all secrets
+- ✅ **Set `FRONTEND_URL`** after frontend deployment (use placeholder initially)
+- ✅ **Keep private keys secure** - never expose in logs or client-side code
+- ✅ **Use different keys** for production vs development
+
+### 3. **Variable Priority**
+
+Some variables have fallbacks or alternatives:
+
+- `SUPABASE_SERVICE_KEY` > `SUPABASE_KEY` (if both set, service key is used)
+- `SERVER_WALLET_ADDRESS` = `PAYMENT_RECIPIENT_WALLET` (either works)
+- `THIRDWEB_SECRET_KEY` > `NEXT_PUBLIC_THIRDWEB_CLIENT_ID` (secret key preferred)
+
+---
+
+## ⚠️ **Security Checklist**
+
+Before deploying to production:
+
+- [ ] All required variables are set
+- [ ] `FRONTEND_URL` matches your actual frontend URL
+- [ ] Private keys are secure (not in Git)
+- [ ] `NODE_ENV=production` is set
+- [ ] Supabase RLS policies are configured
+- [ ] Email domain is verified in Resend
+- [ ] Server wallets have sufficient balance
+- [ ] CORS is properly configured
+
+---
+
+## 🔍 **Verification**
+
+After deployment, test these endpoints:
+
 ```bash
-FRONTEND_URL=https://your-frontend.vercel.app
-PORT=8000
-NODE_ENV=production
+# Health check
+curl https://your-backend.vercel.app/health
+
+# Should return:
+# {
+#   "status": "healthy",
+#   "services": {
+#     "api": "running",
+#     "polymarket": "healthy",
+#     "ai_engine": "healthy",
+#     "facilitator": "healthy",
+#     "database": "healthy"
+#   }
+# }
 ```
 
 ---
 
-## 📝 Copy-Paste Format (One Block)
+## 📚 **Additional Resources**
 
-```bash
-SUPABASE_URL=https://jejfuksuzmsvqmgweopi.supabase.co
-SUPABASE_KEY=your_supabase_anon_key
-SUPABASE_SERVICE_KEY=your_supabase_service_role_key
-OPENAI_API_KEY=sk-proj-...
-OPENAI_MODEL=gpt-4o-mini
-RESEND_API_KEY=re_...
-EMAIL_FROM=onboarding@resend.dev
-EMAIL_FROM_NAME=PolyCaster
-THIRDWEB_SECRET_KEY=your_thirdweb_secret_key
-NEXT_PUBLIC_THIRDWEB_CLIENT_ID=your_thirdweb_client_id
-SERVER_WALLET_ADDRESS=0x2983D066D42a79295dFAC0F752EA2FA7940C33dA
-PAYMENT_RECIPIENT_WALLET=0x2983D066D42a79295dFAC0F752EA2FA7940C33dA
-BASE_RPC_URL=https://sepolia.base.org
-USDC_CONTRACT_ADDRESS=0x036CbD53842c5426634e7929541eC2318f3dCF7e
-MIN_PAYMENT_AMOUNT=0.2
-POLYMARKET_API_URL=https://gamma-api.polymarket.com/markets
-FRONTEND_URL=https://your-frontend.vercel.app
-PORT=8000
-NODE_ENV=production
-```
+- [Vercel Environment Variables](https://vercel.com/docs/concepts/projects/environment-variables)
+- [Supabase Documentation](https://supabase.com/docs)
+- [OpenAI API Keys](https://platform.openai.com/api-keys)
+- [Resend Documentation](https://resend.com/docs)
+- [Thirdweb Documentation](https://portal.thirdweb.com)
 
 ---
 
-## ⚠️ Critical Variables (Must Set)
-
-These **MUST** be set or the backend won't work:
-
-1. ✅ `SUPABASE_URL` - Your Supabase project URL
-2. ✅ `SUPABASE_SERVICE_KEY`` - Supabase service role key (for admin operations)
-3. ✅ `OPENAI_API_KEY` - Your OpenAI API key
-4. ✅ `RESEND_API_KEY` - Your Resend API key (for emails)
-5. ✅ `THIRDWEB_SECRET_KEY` - Your Thirdweb secret key
-6. ✅ `NEXT_PUBLIC_THIRDWEB_CLIENT_ID` - Your Thirdweb client ID
-7. ✅ `FRONTEND_URL` - Your frontend Vercel URL (set after frontend deploys)
-
----
-
-## 🔄 Deployment Workflow
-
-### Step 1: Initial Backend Deployment
-1. Set all variables **except** `FRONTEND_URL` (use placeholder: `https://your-frontend.vercel.app`)
-2. Deploy backend
-3. Copy backend URL (e.g., `https://polycaster-backend.vercel.app`)
-
-### Step 2: After Frontend Deploys
-1. Deploy frontend (use backend URL in `NEXT_PUBLIC_API_URL`)
-2. Copy frontend URL (e.g., `https://polycaster-frontend.vercel.app`)
-3. Update `FRONTEND_URL` in backend environment variables
-4. Redeploy backend
-
----
-
-## 📊 Variable Descriptions
-
-| Variable | Description | Required | Default |
-|----------|-------------|----------|---------|
-| `SUPABASE_URL` | Supabase project URL | ✅ Yes | `https://jejfuksuzmsvqmgweopi.supabase.co` |
-| `SUPABASE_KEY` | Supabase anon/public key | ✅ Yes | - |
-| `SUPABASE_SERVICE_KEY` | Supabase service role key | ✅ Yes | - |
-| `OPENAI_API_KEY` | OpenAI API key | ✅ Yes | - |
-| `OPENAI_MODEL` | OpenAI model to use | ⚠️ Optional | `gpt-4o-mini` |
-| `RESEND_API_KEY` | Resend API key | ✅ Yes | - |
-| `EMAIL_FROM` | Email sender address | ⚠️ Optional | `onboarding@resend.dev` |
-| `EMAIL_FROM_NAME` | Email sender name | ⚠️ Optional | `PolyCaster` |
-| `THIRDWEB_SECRET_KEY` | Thirdweb secret key | ✅ Yes | - |
-| `NEXT_PUBLIC_THIRDWEB_CLIENT_ID` | Thirdweb client ID | ✅ Yes | - |
-| `SERVER_WALLET_ADDRESS` | Server wallet for payments | ⚠️ Optional | `0x2983D066D42a79295dFAC0F752EA2FA7940C33dA` |
-| `PAYMENT_RECIPIENT_WALLET` | Payment recipient wallet | ⚠️ Optional | Same as `SERVER_WALLET_ADDRESS` |
-| `BASE_RPC_URL` | Base Sepolia RPC endpoint | ⚠️ Optional | `https://sepolia.base.org` |
-| `USDC_CONTRACT_ADDRESS` | USDC on Base Sepolia | ⚠️ Optional | `0x036CbD53842c5426634e7929541eC2318f3dCF7e` |
-| `MIN_PAYMENT_AMOUNT` | Minimum payment amount | ⚠️ Optional | `0.2` |
-| `POLYMARKET_API_URL` | Polymarket API endpoint | ⚠️ Optional | `https://gamma-api.polymarket.com/markets` |
-| `FRONTEND_URL` | Frontend URL for CORS/emails | ✅ Yes | - |
-| `PORT` | Server port | ⚠️ Optional | `8000` (Vercel sets automatically) |
-| `NODE_ENV` | Environment mode | ⚠️ Optional | `production` |
-
----
-
-## ✅ Quick Checklist
-
-- [ ] SUPABASE_URL
-- [ ] SUPABASE_KEY
-- [ ] SUPABASE_SERVICE_KEY
-- [ ] OPENAI_API_KEY
-- [ ] OPENAI_MODEL
-- [ ] RESEND_API_KEY
-- [ ] EMAIL_FROM
-- [ ] EMAIL_FROM_NAME
-- [ ] THIRDWEB_SECRET_KEY
-- [ ] NEXT_PUBLIC_THIRDWEB_CLIENT_ID
-- [ ] SERVER_WALLET_ADDRESS
-- [ ] PAYMENT_RECIPIENT_WALLET
-- [ ] BASE_RPC_URL
-- [ ] USDC_CONTRACT_ADDRESS
-- [ ] MIN_PAYMENT_AMOUNT
-- [ ] POLYMARKET_API_URL
-- [ ] FRONTEND_URL (set after frontend deploys)
-- [ ] PORT (optional)
-- [ ] NODE_ENV (optional)
-
----
-
-## 🎯 Where to Add in Vercel
-
-1. Go to your **Backend Project** in Vercel Dashboard
-2. Navigate to **Settings → Environment Variables**
-3. Click **Add New**
-4. Paste each variable (or use bulk import if available)
-5. Set environment to **"Production"**
-6. Click **Save**
-
----
-
-## 🔍 Testing After Deployment
-
-After setting all variables and deploying, test:
-
-1. **Health Check**: `https://your-backend.vercel.app/health`
-2. **Markets**: `https://your-backend.vercel.app/markets`
-3. **Check logs** in Vercel dashboard for any errors
-
-
+Made with ❤️ by the PolyCaster Team

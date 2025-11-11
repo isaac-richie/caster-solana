@@ -1,0 +1,53 @@
+# Backend Environment Variables - Quick Reference
+# Copy and paste these into Vercel Environment Variables
+
+# ============================================
+# Core Configuration
+# ============================================
+NODE_ENV=production
+PORT=8000
+FRONTEND_URL=https://your-frontend.vercel.app
+
+# ============================================
+# Database (Supabase)
+# ============================================
+SUPABASE_URL=your_supabase_url
+SUPABASE_KEY=your_supabase_anon_key
+SUPABASE_SERVICE_KEY=your_supabase_service_key
+
+# ============================================
+# AI Service (OpenAI)
+# ============================================
+OPENAI_API_KEY=your_openai_api_key
+OPENAI_MODEL=gpt-4o-mini
+
+# ============================================
+# Email Service (Resend)
+# ============================================
+RESEND_API_KEY=your_resend_api_key
+EMAIL_FROM=alerts@polycaster.com
+EMAIL_FROM_NAME=PolyCaster
+
+# ============================================
+# EVM Payment (Thirdweb - Base Sepolia)
+# ============================================
+NEXT_PUBLIC_THIRDWEB_CLIENT_ID=your_thirdweb_client_id
+THIRDWEB_SECRET_KEY=your_thirdweb_secret_key
+SERVER_WALLET_ADDRESS=your_evm_wallet_address
+BASE_RPC_URL=https://sepolia.base.org
+USDC_CONTRACT_ADDRESS=0x036CbD53842c5426634e7929541eC2318f3dCF7e
+PRIVATE_KEY=your_private_key
+
+# ============================================
+# Solana Payment
+# ============================================
+SOLANA_SERVER_WALLET=your_solana_wallet_address
+SOLANA_RPC_URL=your_solana_rpc_url
+SOLANA_FACILITATOR_URL=https://facilitator.payai.network
+SOLANA_PRIVATE_KEY=your_solana_private_key_base58
+
+# ============================================
+# Polymarket API
+# ============================================
+POLYMARKET_API_URL=https://gamma-api.polymarket.com/markets
+
