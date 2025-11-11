@@ -72,7 +72,15 @@ function WalletStateTracker() {
   // Track Phantom detection
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const phantom = (window as unknown as Record<string, unknown> & { phantom?: { solana?: unknown } }).phantom?.solana
+      const phantom = (window as unknown as Record<string, unknown> & { 
+        phantom?: { 
+          solana?: {
+            isConnected?: boolean
+            publicKey?: { toString: () => string }
+            isPhantom?: boolean
+          }
+        } 
+      }).phantom?.solana
       console.log('👻 Phantom Detection:', {
         detected: !!phantom,
         isConnected: phantom?.isConnected,
