@@ -42,6 +42,7 @@ import { ComingSoonModal } from '@/components/ui/coming-soon-modal'
 interface MarketHeaderProps {
   searchTerm: string
   onSearchChange: (term: string) => void
+  onSearch: () => void
   selectedCategory: string
   onCategoryChange: (category: string) => void
   sortBy: string
@@ -58,6 +59,7 @@ interface MarketHeaderProps {
 export function MarketHeader({
   searchTerm,
   onSearchChange,
+  onSearch,
   selectedCategory,
   onCategoryChange,
   sortBy,
@@ -178,14 +180,30 @@ export function MarketHeader({
           {/* Search Bar - Desktop */}
           <div className="hidden md:flex flex-1 max-w-md mx-4 lg:mx-8">
             <div className="relative w-full" data-onboarding="search">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
               <Input
                 type="text"
-                placeholder="Search markets..."
+                placeholder="Search markets... (Press Enter)"
                 value={searchTerm}
                 onChange={(e) => onSearchChange(e.target.value)}
-                className="pl-10 bg-white/90 dark:bg-gray-800/90 border-gray-200 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault()
+                    onSearch()
+                  }
+                }}
+                className="pl-10 pr-10 bg-white/90 dark:bg-gray-800/90 border-gray-200 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={onSearch}
+                className="absolute right-1 top-1/2 transform -translate-y-1/2 h-7 w-7 p-0 hover:bg-gray-100 dark:hover:bg-gray-700"
+                aria-label="Search"
+              >
+                <Search className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+              </Button>
             </div>
           </div>
 
@@ -315,14 +333,30 @@ export function MarketHeader({
             className="md:hidden pb-2 sm:pb-3 px-2 sm:px-0"
           >
             <div className="relative">
-              <Search className="absolute left-2 sm:left-3 top-1/2 transform -translate-y-1/2 w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400" />
+              <Search className="absolute left-2 sm:left-3 top-1/2 transform -translate-y-1/2 w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400 pointer-events-none" />
               <Input
                 type="text"
-                placeholder="Search markets..."
+                placeholder="Search markets... (Press Enter)"
                 value={searchTerm}
                 onChange={(e) => onSearchChange(e.target.value)}
-                className="pl-8 sm:pl-10 pr-3 py-2 sm:py-2.5 text-sm sm:text-base bg-white/90 dark:bg-gray-800/90 border-gray-200 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault()
+                    onSearch()
+                  }
+                }}
+                className="pl-8 sm:pl-10 pr-10 sm:pr-12 py-2 sm:py-2.5 text-sm sm:text-base bg-white/90 dark:bg-gray-800/90 border-gray-200 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={onSearch}
+                className="absolute right-1 sm:right-2 top-1/2 transform -translate-y-1/2 h-6 w-6 sm:h-7 sm:w-7 p-0 hover:bg-gray-100 dark:hover:bg-gray-700"
+                aria-label="Search"
+              >
+                <Search className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-500 dark:text-gray-400" />
+              </Button>
             </div>
           </motion.div>
         )}

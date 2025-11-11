@@ -184,11 +184,16 @@ export function WalletLogViewer() {
                     <div className="whitespace-pre-wrap break-words">
                       {log.message}
                     </div>
-                    {log.data && typeof log.data === 'object' ? (
-                      <pre className="mt-1 text-[10px] opacity-75 overflow-x-auto">
-                        {JSON.stringify(log.data as Record<string, unknown>, null, 2)}
-                      </pre>
-                    ) : null}
+                    {(() => {
+                      if (log.data && typeof log.data === 'object') {
+                        return (
+                          <pre className="mt-1 text-[10px] opacity-75 overflow-x-auto">
+                            {JSON.stringify(log.data as Record<string, unknown>, null, 2)}
+                          </pre>
+                        )
+                      }
+                      return null
+                    })()}
                   </div>
                 </div>
               </div>

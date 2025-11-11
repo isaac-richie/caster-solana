@@ -23,7 +23,8 @@ import { normalizeCategory } from '@/lib/categories'
 const LANDING_SKIPPED_KEY = 'polycaster_landing_skipped'
 
 export default function Home() {
-  const [searchTerm, setSearchTerm] = useState('')
+  const [searchInput, setSearchInput] = useState('') // Input value for UI
+  const [searchTerm, setSearchTerm] = useState('') // Actual search term used for API calls (only set on Enter/button click)
   const [markets, setMarkets] = useState<Market[]>([])
   const [trendingMarkets, setTrendingMarkets] = useState<Market[]>([])
   const [trendingMarketsToShow, setTrendingMarketsToShow] = useState(6) // Initially show 6 (2 rows on desktop)
@@ -80,6 +81,12 @@ export default function Home() {
         }
       }, 100)
     }
+  }
+
+  // Handle search trigger (called on Enter key or search button click)
+  const handleSearch = () => {
+    const trimmedSearch = searchInput.trim()
+    setSearchTerm(trimmedSearch)
   }
 
   // Fetch markets function (reusable)
@@ -222,14 +229,9 @@ export default function Home() {
     }
   }, [searchTerm, filters.category]) // Refetch when search or category changes
 
-  // Fetch markets data (only when search/category changes, not on every mount)
+  // Fetch markets data (only when search/category changes)
   useEffect(() => {
-    // Debounce search to avoid too many API calls
-    const timeoutId = setTimeout(() => {
-      fetchMarkets(false) // false = don't force, use cache if available
-    }, searchTerm ? 500 : 0) // 500ms delay for search, immediate for category change
-
-    return () => clearTimeout(timeoutId)
+    fetchMarkets(false) // false = don't force, use cache if available
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters.category, searchTerm]) // Only refetch when search or category changes
 
@@ -407,8 +409,9 @@ export default function Home() {
       </div>
       {/* Header */}
       <MarketHeader
-        searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
+        searchTerm={searchInput}
+        onSearchChange={setSearchInput}
+        onSearch={handleSearch}
         selectedCategory={filters.category || 'All'}
         onCategoryChange={(category) => updateFilter('category', category)}
         sortBy={filters.sortBy || 'price'}
