@@ -1,5 +1,15 @@
 'use client'
 
+// Extend Window interface for Phantom wallet detection
+declare global {
+  interface Window {
+    phantom?: {
+      ethereum?: unknown
+      solana?: unknown
+    }
+  }
+}
+
 import { useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
@@ -27,6 +37,11 @@ import { ConnectButton, useActiveAccount, useSendTransaction } from 'thirdweb/re
 import { client, wallets } from '@/lib/thirdweb'
 import { getContract, prepareContractCall } from 'thirdweb'
 import { baseSepolia } from 'thirdweb/chains'
+import { useWallet as useSolanaWallet, useConnection } from '@solana/wallet-adapter-react'
+import { SolanaConnectButton } from '@/components/wallet/SolanaConnectButton'
+import { getWalletChainType } from '@/lib/wallet-utils'
+import { PublicKey, Transaction } from '@solana/web3.js'
+import { TOKEN_PROGRAM_ID, getAssociatedTokenAddress, createTransferInstruction, createAssociatedTokenAccountInstruction, getAccount } from '@solana/spl-token'
 
 interface FacilitatorProps {
   marketId: string
@@ -55,15 +70,38 @@ export function Facilitator({
   const { mutateAsync: sendTransaction } = useSendTransaction()
   const queryClient = useQueryClient()
   
-  // USDC Contract on Base Sepolia
+  // Solana wallet hooks
+  const solanaWallet = useSolanaWallet()
+  const { connection } = useConnection()
+  
+  // Detect wallet type
+  const walletChainType = getWalletChainType(address || solanaWallet.publicKey?.toString())
+  const isSolanaWallet = walletChainType === 'solana'
+  const isEVMWallet = walletChainType === 'evm'
+  
+  // EVM Configuration (Base Sepolia)
   const USDC_ADDRESS = '0x036CbD53842c5426634e7929541eC2318f3dCF7e'
   const SERVER_WALLET = process.env.NEXT_PUBLIC_SERVER_WALLET || '0xYourServerWalletAddress'
-  const PAYMENT_AMOUNT = '200000' // 0.2 USDC (6 decimals)
+  const PAYMENT_AMOUNT = '300000' // 0.3 USDC (6 decimals)
+  
+  // Solana Configuration
+  const SOLANA_SERVER_WALLET = process.env.NEXT_PUBLIC_SOLANA_SERVER_WALLET || ''
+  const SOLANA_USDC_MINT = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v' // USDC on Solana
+  const SOLANA_PAYMENT_AMOUNT = 300000 // 0.3 USDC (6 decimals)
+  
+  // Debug: Log Solana config (remove in production)
+  if (typeof window !== 'undefined' && !SOLANA_SERVER_WALLET) {
+    console.warn('⚠️ NEXT_PUBLIC_SOLANA_SERVER_WALLET is not set in frontend .env file')
+    console.warn('⚠️ Add NEXT_PUBLIC_SOLANA_SERVER_WALLET=your_wallet_address to polycasterz/.env')
+  }
 
   const handleAnalysis = async () => {
-    // Always require wallet connection for payment
-    if (!isConnected) {
-      setError('Please connect your wallet to analyze markets.')
+    // Always require wallet connection for payment (EVM or Solana)
+    const hasEVMWallet = isConnected && account
+    const hasSolanaWallet = solanaWallet.connected && solanaWallet.publicKey
+    
+    if (!hasEVMWallet && !hasSolanaWallet) {
+      setError('Please connect your wallet (EVM or Solana) to analyze markets.')
       return
     }
 
@@ -83,7 +121,7 @@ export function Facilitator({
         },
         body: JSON.stringify({
           payment_verified: false, // Always start with false to trigger payment flow
-          user_wallet: address || undefined,
+          user_wallet: address || solanaWallet.publicKey?.toString() || undefined,
         }),
       })
 
@@ -138,8 +176,14 @@ export function Facilitator({
   }
 
   const handlePayment = async () => {
-    if (!account) {
-      setError('Please connect your wallet first')
+    // Check wallet connection
+    if (isEVMWallet && !account) {
+      setError('Please connect your EVM wallet first')
+      return
+    }
+    
+    if (isSolanaWallet && !solanaWallet.publicKey) {
+      setError('Please connect your Solana wallet first')
       return
     }
 
@@ -147,54 +191,22 @@ export function Facilitator({
     setError(null)
 
     try {
-      console.log('🔄 Starting USDC payment...')
-      console.log('From:', account.address)
-      console.log('To:', SERVER_WALLET)
-      console.log('Amount:', PAYMENT_AMOUNT, '(0.2 USDC)')
-
-      // Get USDC contract
-      const usdcContract = getContract({
-        client,
-        chain: baseSepolia,
-        address: USDC_ADDRESS
-      })
-
-      // Prepare USDC transfer transaction
-      const transaction = prepareContractCall({
-        contract: usdcContract,
-        method: 'function transfer(address to, uint256 amount) returns (bool)',
-        params: [SERVER_WALLET, BigInt(PAYMENT_AMOUNT)]
-      })
-
-      console.log('📝 Transaction prepared, waiting for user signature...')
-
-      // Send transaction (MetaMask will pop up)
-      const result = await sendTransaction(transaction)
-      
-      console.log('✅ Transaction sent! Hash:', result.transactionHash)
-      console.log('⏳ Waiting for confirmation...')
-
-      // Wait for transaction to be mined
-      // The transaction is already confirmed when sendTransaction resolves
-
-      setPaymentData(result.transactionHash)
-      setPaymentRequired(false)
-      
-      console.log('🎉 Payment confirmed on-chain!')
-      
-      // Now proceed with analysis
-      await handleAnalysisWithPayment(result.transactionHash)
-
+      // Route to appropriate payment handler based on wallet type
+      if (isSolanaWallet) {
+        await handleSolanaPayment()
+      } else {
+        // Default to EVM (backward compatible)
+        await handleEVMPayment()
+      }
     } catch (error) {
       console.error('❌ Payment error:', error)
-      
       const errorMessage = error instanceof Error ? error.message : String(error)
       
       // User-friendly error messages
-      if (errorMessage.includes('user rejected')) {
+      if (errorMessage.includes('user rejected') || errorMessage.includes('User rejected')) {
         setError('Transaction rejected. Please try again.')
-      } else if (errorMessage.includes('insufficient funds')) {
-        setError('Insufficient USDC balance. You need 0.2 USDC.')
+      } else if (errorMessage.includes('insufficient funds') || errorMessage.includes('insufficient')) {
+        setError('Insufficient USDC balance. You need 0.3 USDC.')
       } else {
         setError(`Payment failed: ${errorMessage || 'Unknown error'}`)
       }
@@ -203,7 +215,198 @@ export function Facilitator({
     }
   }
 
-  const handleAnalysisWithPayment = async (txHash?: string) => {
+  const handleEVMPayment = async () => {
+    if (!account) {
+      throw new Error('EVM wallet not connected')
+    }
+
+    console.log('🔄 Starting EVM USDC payment...')
+    console.log('From:', account.address)
+    console.log('To:', SERVER_WALLET)
+    console.log('Amount:', PAYMENT_AMOUNT, '(0.3 USDC)')
+
+    // Get USDC contract
+    const usdcContract = getContract({
+      client,
+      chain: baseSepolia,
+      address: USDC_ADDRESS
+    })
+
+    // Prepare USDC transfer transaction
+    const transaction = prepareContractCall({
+      contract: usdcContract,
+      method: 'function transfer(address to, uint256 amount) returns (bool)',
+      params: [SERVER_WALLET, BigInt(PAYMENT_AMOUNT)]
+    })
+
+    console.log('📝 Transaction prepared, waiting for user signature...')
+
+    // Send transaction (MetaMask will pop up)
+    const result = await sendTransaction(transaction)
+    
+    console.log('✅ Transaction sent! Hash:', result.transactionHash)
+    console.log('⏳ Waiting for confirmation...')
+
+    setPaymentData(result.transactionHash)
+    setPaymentRequired(false)
+    
+    console.log('🎉 Payment confirmed on-chain!')
+    
+    // Now proceed with analysis (EVM)
+    await handleAnalysisWithPayment(result.transactionHash)
+  }
+
+  const handleSolanaPayment = async () => {
+    if (!solanaWallet.publicKey || !solanaWallet.sendTransaction) {
+      throw new Error('Solana wallet not connected')
+    }
+
+    if (!SOLANA_SERVER_WALLET || SOLANA_SERVER_WALLET.trim() === '') {
+      console.error('❌ SOLANA_SERVER_WALLET is empty or not configured')
+      console.error('❌ Check that NEXT_PUBLIC_SOLANA_SERVER_WALLET is set in polycasterz/.env')
+      console.error('❌ Current value:', SOLANA_SERVER_WALLET || '(empty)')
+      console.error('❌ If you just added it, RESTART the Next.js dev server (Ctrl+C then npm run dev)')
+      throw new Error('Solana server wallet not configured. Please add NEXT_PUBLIC_SOLANA_SERVER_WALLET to your .env file and restart the dev server.')
+    }
+    
+    // Validate Solana address format (base58, 32-44 chars)
+    if (SOLANA_SERVER_WALLET.length < 32 || SOLANA_SERVER_WALLET.length > 44) {
+      console.error('❌ Invalid Solana wallet address format:', SOLANA_SERVER_WALLET)
+      throw new Error('Invalid Solana server wallet address format. Solana addresses should be 32-44 characters.')
+    }
+
+    console.log('🔄 Starting Solana USDC payment...')
+    console.log('From:', solanaWallet.publicKey.toString())
+    console.log('To:', SOLANA_SERVER_WALLET)
+    console.log('Amount:', SOLANA_PAYMENT_AMOUNT, '(0.3 USDC)')
+
+    try {
+      const fromPubkey = solanaWallet.publicKey
+      const toPubkey = new PublicKey(SOLANA_SERVER_WALLET)
+      const mintPubkey = new PublicKey(SOLANA_USDC_MINT)
+
+      // Get associated token addresses
+      const fromTokenAccount = await getAssociatedTokenAddress(
+        mintPubkey,
+        fromPubkey
+      )
+
+      const toTokenAccount = await getAssociatedTokenAddress(
+        mintPubkey,
+        toPubkey,
+        true // allowOwnerOffCurve
+      )
+
+      // Check if user's token account exists and has balance
+      let userTokenAccount
+      try {
+        userTokenAccount = await getAccount(connection, fromTokenAccount)
+        console.log('✅ User token account exists')
+        console.log('💰 User USDC balance:', userTokenAccount.amount.toString())
+        
+        // Check if user has sufficient balance
+        if (userTokenAccount.amount < BigInt(SOLANA_PAYMENT_AMOUNT)) {
+          throw new Error(`Insufficient USDC balance. You need 0.3 USDC but only have ${Number(userTokenAccount.amount) / 1_000_000} USDC.`)
+        }
+      } catch (error) {
+        if (error instanceof Error && error.message.includes('Insufficient')) {
+          throw error
+        }
+        // Token account doesn't exist
+        console.error('❌ User token account does not exist or error:', error)
+        throw new Error('You do not have a USDC token account. Please acquire USDC in your wallet first.')
+      }
+
+      // Check if recipient token account exists, create if not
+      const transaction = new Transaction()
+      
+      try {
+        await getAccount(connection, toTokenAccount)
+        console.log('✅ Recipient token account exists')
+      } catch {
+        // Token account doesn't exist, create it
+        console.log('📝 Creating recipient token account...')
+        const createAccountInstruction = createAssociatedTokenAccountInstruction(
+          fromPubkey, // payer
+          toTokenAccount, // associatedToken
+          toPubkey, // owner
+          mintPubkey // mint
+        )
+        transaction.add(createAccountInstruction)
+      }
+
+      // Create transfer instruction
+      const transferInstruction = createTransferInstruction(
+        fromTokenAccount,
+        toTokenAccount,
+        fromPubkey,
+        SOLANA_PAYMENT_AMOUNT,
+        [],
+        TOKEN_PROGRAM_ID
+      )
+
+      // Add transfer instruction to transaction
+      transaction.add(transferInstruction)
+
+      // Get recent blockhash with retry logic
+      let blockhash: string
+      let retries = 3
+      while (retries > 0) {
+        try {
+          const result = await connection.getLatestBlockhash('confirmed')
+          blockhash = result.blockhash
+          break
+        } catch (error: unknown) {
+          retries--
+          if (retries === 0) {
+            const errorMessage = error instanceof Error ? error.message : String(error)
+            console.error('❌ Failed to get blockhash after retries:', errorMessage)
+            if (errorMessage.includes('403') || errorMessage.includes('Access forbidden')) {
+              throw new Error('Solana RPC endpoint is blocking requests. Please configure NEXT_PUBLIC_SOLANA_RPC_URL with a reliable RPC provider (Helius, QuickNode, etc.) in your .env file.')
+            }
+            throw new Error(`Failed to get recent blockhash: ${errorMessage}`)
+          }
+          // Wait before retry
+          await new Promise(resolve => setTimeout(resolve, 1000))
+        }
+      }
+      
+      transaction.recentBlockhash = blockhash!
+      transaction.feePayer = fromPubkey
+
+      console.log('📝 Transaction prepared, waiting for user signature...')
+
+      // Send and confirm transaction using Solana Wallet Adapter
+      const signature = await solanaWallet.sendTransaction(transaction, connection)
+      
+      console.log('✅ Transaction sent! Signature:', signature)
+      console.log('⏳ Waiting for confirmation...')
+
+      // Wait for confirmation and verify it succeeded
+      const confirmation = await connection.confirmTransaction(signature, 'confirmed')
+      
+      // Check if transaction actually succeeded
+      if (confirmation.value.err) {
+        console.error('❌ Transaction failed on-chain:', confirmation.value.err)
+        throw new Error(`Transaction failed: ${JSON.stringify(confirmation.value.err)}`)
+      }
+      
+      console.log('🎉 Payment confirmed on-chain!')
+      console.log('✅ Transaction status:', confirmation.value)
+
+      setPaymentData(signature)
+      setPaymentRequired(false)
+      
+      // Now proceed with analysis (Solana)
+      await handleAnalysisWithPayment(signature, 'solana')
+
+    } catch (error) {
+      console.error('❌ Solana payment error:', error)
+      throw error
+    }
+  }
+
+  const handleAnalysisWithPayment = async (txHash?: string, chain: 'evm' | 'solana' = 'evm') => {
     setIsAnalyzing(true)
     setProgress(0)
 
@@ -222,6 +425,11 @@ export function Facilitator({
       // Use API URL from env or default to localhost
       const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
       
+      // Get wallet address based on chain type
+      const userWalletAddress = chain === 'solana' 
+        ? (solanaWallet.publicKey?.toString() || '')
+        : (address || account?.address || '0x0000000000000000000000000000000000000000')
+
       // Call the AI analysis API with payment verification
       const response = await fetch(`${API_URL}/ai/analyze/${marketId}`, {
         method: 'POST',
@@ -230,16 +438,20 @@ export function Facilitator({
         },
         body: JSON.stringify({
           payment_verified: true,
-          user_wallet: address || account?.address || '0x0000000000000000000000000000000000000000',
+          user_wallet: userWalletAddress,
           transaction_hash: txHash || paymentData,
+          chain: chain, // Send chain type to backend
         }),
       })
 
-      if (!response.ok) {
-        throw new Error('Analysis failed')
-      }
-
       const data = await response.json()
+
+      if (!response.ok) {
+        // Extract error message from backend response
+        const errorMessage = data.error || data.message || 'Analysis failed'
+        console.error('❌ Backend error:', errorMessage)
+        throw new Error(errorMessage)
+      }
       
       clearInterval(progressInterval)
       setProgress(100)
@@ -293,7 +505,22 @@ export function Facilitator({
 
     } catch (error) {
       console.error('Analysis error:', error)
-      setError('Failed to analyze market. Please try again.')
+      const errorMessage = error instanceof Error ? error.message : String(error)
+      
+      // Show specific error messages
+      let userFriendlyMessage = 'Failed to analyze market. Please try again.'
+      
+      if (errorMessage.includes('Transaction failed') || errorMessage.includes('Transaction not found')) {
+        userFriendlyMessage = 'Transaction verification failed. The payment transaction may have failed on-chain. Please try again.'
+      } else if (errorMessage.includes('Solana payment facilitator not configured')) {
+        userFriendlyMessage = 'Solana payment system not configured. Please contact support.'
+      } else if (errorMessage.includes('InvalidAccountData')) {
+        userFriendlyMessage = 'Token account error. Please ensure you have USDC in your wallet and try again.'
+      } else if (errorMessage) {
+        userFriendlyMessage = errorMessage
+      }
+      
+      setError(userFriendlyMessage)
       setIsAnalyzing(false)
       setIsPaymentProcessing(false)
       setProgress(0)
@@ -310,19 +537,6 @@ export function Facilitator({
         return 'bg-yellow-100 text-yellow-800 border-yellow-200'
       default:
         return 'bg-gray-100 text-gray-800 border-gray-200'
-    }
-  }
-
-  const getRiskLevelColor = (riskLevel: string) => {
-    switch (riskLevel) {
-      case 'LOW':
-        return 'bg-green-100 text-green-800'
-      case 'MEDIUM':
-        return 'bg-yellow-100 text-yellow-800'
-      case 'HIGH':
-        return 'bg-red-100 text-red-800'
-      default:
-        return 'bg-gray-100 text-gray-800'
     }
   }
 
@@ -351,8 +565,9 @@ export function Facilitator({
             </p>
           </div>
 
+
           {/* Wallet Connection Required */}
-          {!isConnected && (
+          {!isConnected && !solanaWallet.connected && (
             <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
               <div className="flex items-center space-x-3 mb-3">
                 <AlertTriangle className="w-5 h-5 text-blue-600 dark:text-blue-400" />
@@ -361,25 +576,36 @@ export function Facilitator({
                 </h4>
               </div>
               <p className="text-sm text-blue-700 dark:text-blue-300 mb-4">
-                Connect your wallet to analyze markets and make payments.
+                Connect your wallet (EVM or Solana) to analyze markets and make payments.
               </p>
-              <div className="w-full">
+              <div className="flex flex-col sm:flex-row gap-2 mb-3">
                 <ConnectButton
                   client={client}
                   wallets={wallets}
+                  recommendedWallets={wallets}
                   theme="dark"
                   connectModal={{
                     size: "compact",
-                    title: "Connect Wallet",
+                    title: "Connect EVM Wallet",
                     titleIcon: "",
                     showThirdwebBranding: false,
+                    welcomeScreen: {
+                      title: "Connect EVM Wallet",
+                      subtitle: "MetaMask, Coinbase, Trust Wallet only (Phantom excluded - use Solana button)",
+                    },
                   }}
                   connectButton={{
-                    label: "Connect Wallet",
-                    className: "w-full polycaster-gradient hover:opacity-90 text-white py-2 px-4 rounded-lg transition-all duration-200 font-medium shadow-md hover:shadow-lg flex items-center justify-center space-x-2",
+                    label: "Connect EVM",
+                    className: "w-full sm:flex-1 polycaster-gradient hover:opacity-90 text-white py-2 px-4 rounded-lg transition-all duration-200 font-medium shadow-md hover:shadow-lg flex items-center justify-center space-x-2",
                   }}
                 />
+                <div className="w-full sm:flex-1">
+                  <SolanaConnectButton className="w-full" />
+                </div>
               </div>
+              <p className="text-xs text-blue-600 dark:text-blue-400 text-center">
+                💡 <strong>Phantom users:</strong> Use the purple button for Solana payments
+              </p>
             </div>
           )}
 
@@ -394,7 +620,7 @@ export function Facilitator({
                 </h4>
               </div>
               <p className="text-sm text-yellow-700 dark:text-yellow-300 mb-4">
-                Analysis requires a payment of $0.20 USDC to proceed.
+                Analysis requires a payment of $0.30 USDC to proceed.
               </p>
               <Button
                 onClick={handlePayment}
@@ -409,7 +635,7 @@ export function Facilitator({
                 ) : (
                   <div className="flex items-center space-x-2">
                     <CreditCard className="w-4 h-4" />
-                    <span>Pay $0.20 USDC</span>
+                    <span>Pay $0.30 USDC</span>
                   </div>
                 )}
               </Button>
@@ -430,12 +656,16 @@ export function Facilitator({
                   {paymentData}
                 </p>
                 <a
-                  href={`https://sepolia.basescan.org/tx/${paymentData}`}
+                  href={
+                    walletChainType === 'solana'
+                      ? `https://solscan.io/tx/${paymentData}`
+                      : `https://sepolia.basescan.org/tx/${paymentData}`
+                  }
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-xs text-green-600 dark:text-green-400 hover:underline flex items-center gap-1"
                 >
-                  View on BaseScan →
+                  View on {walletChainType === 'solana' ? 'Solscan' : 'BaseScan'} →
                 </a>
               </div>
             </div>
@@ -444,18 +674,18 @@ export function Facilitator({
           {!analysis && !isAnalyzing && !paymentRequired && (
             <Button
               onClick={handleAnalysis}
-              disabled={!isConnected}
+              disabled={!isConnected && !solanaWallet.connected}
               className="w-full polycaster-gradient hover:opacity-90 disabled:bg-gray-400 text-white py-3 px-4 rounded-lg transition-all duration-200 font-semibold shadow-md hover:shadow-lg flex items-center justify-center space-x-2"
             >
               <Zap className="w-5 h-5" />
-              <span>Start AI Analysis ($0.20)</span>
+              <span>Start AI Analysis ($0.30)</span>
             </Button>
           )}
           
-          {!isConnected && (
+          {!isConnected && !solanaWallet.connected && (
             <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
               <p className="text-sm text-yellow-800 dark:text-yellow-200 text-center">
-                Please connect your wallet to analyze markets
+                Please connect your wallet (EVM or Solana) to analyze markets
               </p>
             </div>
           )}
@@ -513,35 +743,6 @@ export function Facilitator({
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              {/* Key Metrics Row */}
-              <div className="grid grid-cols-3 gap-4">
-                <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-lg border border-blue-200 dark:border-blue-800">
-                  <div className="text-2xl font-bold text-blue-700 dark:text-blue-300 mb-1">
-                  {Math.round(analysis.confidence * 100)}%
-                </div>
-                  <div className="text-xs text-blue-600 dark:text-blue-400 font-medium">
-                    Confidence
-                  </div>
-                  <Progress value={analysis.confidence * 100} className="mt-2 h-1.5" />
-                </div>
-                <div className="text-center p-4 bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 rounded-lg border border-green-200 dark:border-green-800">
-                  <div className="text-2xl font-bold text-green-700 dark:text-green-300 mb-1">
-                  {formatPrice(analysis.priceTarget)}
-                </div>
-                  <div className="text-xs text-green-600 dark:text-green-400 font-medium">
-                  Price Target
-                </div>
-              </div>
-                <div className="text-center p-4 bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-900/20 dark:to-yellow-800/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
-                <Badge 
-                  variant="secondary" 
-                    className={cn("text-sm font-semibold px-3 py-1.5", getRiskLevelColor(analysis.riskLevel))}
-                >
-                  {analysis.riskLevel} Risk
-                </Badge>
-                </div>
-              </div>
-
               {/* Executive Summary */}
               {analysis.executiveSummary && (
                 <div className="p-5 bg-gradient-to-r from-purple-50 via-blue-50 to-indigo-50 dark:from-purple-900/20 dark:via-blue-900/20 dark:to-indigo-900/20 rounded-lg border-l-4 border-purple-500">

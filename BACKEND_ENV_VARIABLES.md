@@ -177,3 +177,4 @@ After setting all variables and deploying, test:
 2. **Markets**: `https://your-backend.vercel.app/markets`
 3. **Check logs** in Vercel dashboard for any errors
 
+

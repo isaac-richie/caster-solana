@@ -123,3 +123,4 @@ Since `/stats` endpoints don't exist, we can:
 3. ⏭️ Consider on-chain indexing for trader leaderboards
 4. ⏭️ Build platform statistics from market data aggregation
 
+

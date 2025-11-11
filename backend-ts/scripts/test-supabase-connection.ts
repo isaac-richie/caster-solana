@@ -73,3 +73,4 @@ testSupabaseConnection()
     process.exit(1)
   })
 
+

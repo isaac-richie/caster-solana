@@ -182,3 +182,4 @@ cat .env | grep EMAIL_FROM
 4. **Test with Resend's test domain** (`onboarding@resend.dev`)
 5. **Check network tab** in browser for failed API calls
 
+

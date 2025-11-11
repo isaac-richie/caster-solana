@@ -358,7 +358,7 @@ export class DatabaseService {
 
       return {
         total_signals: totalSignals,
-        total_spent: totalSignals * 0.2, // Assuming $0.20 per signal
+        total_spent: totalSignals * 0.3, // Assuming $0.30 per signal
         success_rate: Math.round(successRate * 100) / 100,
         favorite_categories: favoriteCategories
       }

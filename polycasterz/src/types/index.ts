@@ -32,6 +32,7 @@ export interface Signal {
   risk_level: 'LOW' | 'MEDIUM' | 'HIGH'
   raw_analysis: string
   created_at: string
+  chain?: 'evm' | 'solana' // Blockchain used for payment
 }
 
 export interface User {

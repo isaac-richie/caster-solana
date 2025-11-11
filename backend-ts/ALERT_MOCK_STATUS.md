@@ -65,3 +65,4 @@ The code includes mock fallback for:
 
 **But with current `.env` configuration, alerts use the REAL database.**
 
+

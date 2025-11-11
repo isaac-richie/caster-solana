@@ -2,6 +2,7 @@ import { facilitator, settlePayment } from 'thirdweb/x402'
 import { createThirdwebClient } from 'thirdweb'
 import { baseSepolia } from 'thirdweb/chains'
 import { FacilitatorResponse } from '../types'
+import { solanaFacilitatorService } from './solana-facilitator'
 import dotenv from 'dotenv'
 
 // Load environment variables
@@ -43,11 +44,27 @@ export class FacilitatorService {
     })
   }
 
+  /**
+   * Settle payment - supports both EVM (default) and Solana
+   * 
+   * @param resourceUrl - The resource being paid for
+   * @param paymentData - Payment transaction data
+   * @param price - Price string (e.g., '$0.30')
+   * @param chain - Optional: 'evm' (default) or 'solana'
+   * @returns FacilitatorResponse
+   */
   async settlePayment(
     resourceUrl: string,
     paymentData: string,
-    price: string = '$0.20'
+    price: string = '$0.30',
+    chain?: 'evm' | 'solana'
   ): Promise<FacilitatorResponse> {
+    // Route to Solana facilitator if requested
+    if (chain === 'solana') {
+      return await solanaFacilitatorService.settlePayment(resourceUrl, paymentData, price)
+    }
+
+    // Default: Use existing Thirdweb facilitator (EVM) - NO CHANGES TO EXISTING LOGIC
     try {
       // If facilitator is not available (missing secret key), return mock response
       if (!this.thirdwebFacilitator) {
@@ -101,7 +118,13 @@ export class FacilitatorService {
     }
   }
 
-  async getSupportedPaymentMethods(chainId?: number) {
+  async getSupportedPaymentMethods(chainId?: number, chain?: 'evm' | 'solana') {
+    // Route to Solana if requested
+    if (chain === 'solana') {
+      return await solanaFacilitatorService.getSupportedPaymentMethods()
+    }
+
+    // Default: Use existing Thirdweb methods (EVM) - NO CHANGES TO EXISTING LOGIC
     try {
       // If facilitator is not available, return mock methods
       if (!this.thirdwebFacilitator) {

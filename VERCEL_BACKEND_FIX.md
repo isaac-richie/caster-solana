@@ -67,3 +67,4 @@ If the above doesn't work, you can restructure to use Vercel's API directory:
 
 But the current setup should work with the fixes applied.
 
+

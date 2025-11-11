@@ -132,3 +132,4 @@ export async function getUser(walletAddress: string): Promise<User | null> {
   }
 }
 
+

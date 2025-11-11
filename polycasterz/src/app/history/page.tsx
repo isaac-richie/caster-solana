@@ -115,7 +115,7 @@ export default function HistoryPage() {
     avgConfidence: signals.length > 0
       ? Math.round((signals.reduce((sum, s) => sum + s.confidence_score, 0) / signals.length) * 100)
       : 0,
-    totalSpent: signals.length * 0.2, // $0.20 per signal
+    totalSpent: signals.length * 0.3, // $0.30 per signal
   }
 
   return (
@@ -285,12 +285,26 @@ export default function HistoryPage() {
                         <CardTitle className="text-base font-semibold text-gray-900 dark:text-white line-clamp-2 flex-1">
                           {signal.market_question}
                         </CardTitle>
-                        <Badge
-                          className={`${getRecommendationColor(signal.recommendation)} flex items-center gap-1 px-1.5 py-0.5 text-[10px]`}
-                        >
-                          {getRecommendationIcon(signal.recommendation)}
-                          {signal.recommendation}
-                        </Badge>
+                        <div className="flex flex-col items-end gap-1">
+                          <Badge
+                            className={`${getRecommendationColor(signal.recommendation)} flex items-center gap-1 px-1.5 py-0.5 text-[10px]`}
+                          >
+                            {getRecommendationIcon(signal.recommendation)}
+                            {signal.recommendation}
+                          </Badge>
+                          {signal.chain && (
+                            <Badge
+                              variant="outline"
+                              className={`text-[9px] px-1.5 py-0.5 ${
+                                signal.chain === 'evm'
+                                  ? 'border-blue-300 dark:border-blue-700 text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-900/20'
+                                  : 'border-purple-300 dark:border-purple-700 text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-900/20'
+                              }`}
+                            >
+                              {signal.chain === 'evm' ? 'EVM' : 'Solana'}
+                            </Badge>
+                          )}
+                        </div>
                       </div>
                     </CardHeader>
                     <CardContent className="space-y-3 px-4 pb-4">

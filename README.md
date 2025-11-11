@@ -28,16 +28,19 @@ PolyCaster is a modern web application that provides real-time analytics and AI-
 - 📊 **Category Filtering**: Browse markets by Sports, Crypto, Politics, Tech, Science, and Culture
 - ⭐ **Watchlist**: Save up to 10 favorite markets with notes
 - 🔔 **Price Alerts**: Set alerts for price movements with email notifications
-- 🤖 **AI Analysis**: Premium institutional-grade market analysis ($0.20 USDC per analysis)
+- 🤖 **AI Analysis**: Premium institutional-grade market analysis ($0.3 USDC per analysis)
 - 💰 **ROI Calculator**: Calculate potential returns on market positions
 - 📜 **Signal History**: Track all purchased AI analysis signals
-- 💼 **Web3 Integration**: Wallet & email login via Thirdweb
+- 💼 **Multi-Chain Web3 Integration**: EVM (Base Sepolia) & Solana wallet support via Thirdweb & Solana Wallet Adapter
 - 📧 **Email Notifications**: Receive alerts via verified email addresses
 - 🎓 **Onboarding Tour**: Interactive tutorial for new users
 - 📚 **Help & FAQ**: Comprehensive documentation and support
 - 📈 **Visual Analytics**: Interactive probability bars and market statistics
 - ⚡ **Live Updates**: Recently active markets with real-time data
 - 📱 **Mobile Optimized**: Fully responsive design with touch-friendly UI
+- 🔗 **Multi-Chain Payments**: Pay with USDC on Base Sepolia (EVM) or Solana
+- 📊 **Enhanced Market Display**: Load More functionality for Trending, Live, and All Markets sections
+- 📈 **Market Statistics**: Total Volume tracking and display in header
 
 ---
 
@@ -141,10 +144,12 @@ The following warnings are **safe to ignore**:
 - **Real-time subscriptions** - Live updates
 
 ### **Blockchain**
-- **Thirdweb SDK** - Wallet connection
-- **WalletConnect** - Multi-wallet support
-- **MetaMask** - Browser wallet integration
-- **Web3 Payments** - USDC transactions
+- **Thirdweb SDK** - EVM wallet connection & payment facilitator
+- **Solana Wallet Adapter** - Solana wallet connection (Phantom, Solflare, etc.)
+- **WalletConnect** - Multi-wallet support (EVM)
+- **MetaMask** - Browser wallet integration (EVM)
+- **Multi-Chain Payments** - USDC transactions on Base Sepolia (EVM) and Solana
+- **Chain Tracking** - Database tracks which chain was used for each signal purchase
 
 ### **External APIs**
 - **Polymarket Gamma API** - Real-time market data
@@ -189,6 +194,9 @@ npm install
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:8000
 NEXT_PUBLIC_THIRDWEB_CLIENT_ID=your_thirdweb_client_id
+NEXT_PUBLIC_SERVER_WALLET=0x... (EVM server wallet)
+NEXT_PUBLIC_SOLANA_SERVER_WALLET=... (Solana server wallet)
+NEXT_PUBLIC_SOLANA_RPC_URL=https://... (Solana RPC endpoint - Helius, QuickNode, etc.)
 ```
 
 **Backend (`backend-ts/.env`):**
@@ -204,10 +212,23 @@ POLYMARKET_API_URL=https://gamma-api.polymarket.com/markets
 # Server
 PORT=8000
 NODE_ENV=development
+FRONTEND_URL=http://localhost:3000
 
 # Email Service (Resend)
 RESEND_API_KEY=your_resend_api_key
 EMAIL_FROM=onboarding@resend.dev
+
+# OpenAI (for AI analysis)
+OPENAI_API_KEY=sk-...
+
+# Blockchain (EVM - Base Sepolia)
+BASE_RPC_URL=https://sepolia.base.org
+USDC_CONTRACT_ADDRESS=0x036CbD53842c5426634e7929541eC2318f3dCF7e
+SERVER_WALLET=0x...
+
+# Blockchain (Solana - Optional)
+SOLANA_SERVER_WALLET=...
+SOLANA_FACILITATOR_URL=... (optional, for X402 payments)
 ```
 
 ### **Run the Application**
@@ -323,16 +344,19 @@ cat polycasterz/.env.local | grep API_URL
 - Returns only active, open markets
 - Advanced filters: Status, Price Range, Volume Range
 - Sorting options: Price, Liquidity, Time
+- Load More functionality for progressive market loading
 
 ### **2. Smart Category Filtering** 📂
-- **All** - Recently active markets across all categories (up to 100 markets)
-- **Sports** - Sports betting and predictions
-- **Crypto** - Cryptocurrency and DeFi markets
-- **Politics** - Political events and elections
-- **Tech** - Technology and AI markets
-- **Science** - Scientific breakthroughs and research
-- **Culture** - Entertainment, media, and culture
-- **Economics** - Economic indicators and trends
+- **All** - Recently active markets across all categories (up to 100 markets, with Load More)
+- **Sports** - Sports betting and predictions (150 markets fetched, 9 shown initially)
+- **Crypto** - Cryptocurrency and DeFi markets (150 markets fetched, 9 shown initially)
+- **Politics** - Political events and elections (150 markets fetched, 9 shown initially)
+- **Tech** - Technology and AI markets (150 markets fetched, 9 shown initially)
+- **Science** - Scientific breakthroughs and research (150 markets fetched, 9 shown initially)
+- **Culture** - Entertainment, media, and culture (150 markets fetched, 9 shown initially)
+- **Economics** - Economic indicators and trends (150 markets fetched, 9 shown initially)
+- **Trending Markets** - 20 high-volume markets (6 shown initially, Load More available)
+- **Live Markets** - 40 active markets from API (8 shown initially, Load More available)
 
 ### **3. Enhanced Market Cards** 📊
 - **Visual Probability Bars** - Green (YES) vs Red (NO) split
@@ -379,7 +403,7 @@ cat polycasterz/.env.local | grep API_URL
 - **Recommendations**: BUY/SELL/HOLD with confidence scores
 - **Price Targets**: Fair value estimates with methodology
 - **Risk Levels**: LOW/MEDIUM/HIGH assessment
-- **Payment**: $0.20 USDC per analysis via Thirdweb facilitator
+- **Payment**: $0.3 USDC per analysis via Thirdweb facilitator (EVM) or Solana SPL Token transfers
 - **History**: Track all purchased signals (`/history`)
 
 ### **7. ROI Calculator** 💰
@@ -399,14 +423,16 @@ cat polycasterz/.env.local | grep API_URL
 - Detailed signal cards with full analysis
 - Export capabilities (coming soon)
 
-### **9. Web3 & Authentication** 💼
-- **Wallet Login**: MetaMask, WalletConnect, Coinbase Wallet
-- **Email Login**: Thirdweb In-App Wallet
-- **Social Login**: Google, Apple, Facebook
-- Seamless Thirdweb integration
-- Pay for AI analysis with USDC
-- Email verification for notifications
-- User profile tracking
+### **9. Multi-Chain Web3 & Authentication** 💼
+- **EVM Wallets**: MetaMask, WalletConnect, Coinbase Wallet, Trust Wallet (via Thirdweb)
+- **Solana Wallets**: Phantom, Solflare, Magic Eden, Leap Wallet, Pontem (via Solana Wallet Adapter)
+- **Email Login**: Thirdweb In-App Wallet (EVM)
+- **Social Login**: Google, Apple, Facebook (via Thirdweb)
+- **Multi-Chain Payments**: Pay with USDC on Base Sepolia (EVM) or Solana
+- **Chain Detection**: Automatic detection of wallet type (EVM vs Solana)
+- **Chain Tracking**: Database tracks which chain was used for each signal purchase
+- **Email verification** for notifications
+- **User profile tracking** with primary chain preference
 
 ### **10. Email Notifications** 📧
 - Email alerts when price triggers
@@ -509,7 +535,9 @@ GET http://localhost:8000/markets/category/:category/analytics?limit=20
 POST http://localhost:8000/ai/analyze/:marketId
 Body: {
   "payment_verified": true,
-  "user_wallet": "0x..."
+  "user_wallet": "0x..." or "SolanaAddress...",
+  "chain": "evm" or "solana",
+  "transaction_hash": "0x..." or "SolanaSignature..."
 }
 
 # Response:
@@ -606,16 +634,18 @@ DELETE http://localhost:8000/alerts/:id
 
 ### **Payment & Facilitator**
 ```bash
-# Settle payment via Thirdweb facilitator
+# Settle payment via Thirdweb facilitator (EVM) or Solana facilitator
 POST http://localhost:8000/api/payment/settle
 Body: {
   "resourceUrl": "...",
   "paymentData": {...},
-  "price": "$0.20"
+  "price": "$0.30",
+  "chain": "evm" or "solana" (optional, defaults to "evm")
 }
 
 # Get supported payment methods
-GET http://localhost:8000/api/payment/methods?chainId=8453
+GET http://localhost:8000/api/payment/methods?chainId=8453&chain=evm
+GET http://localhost:8000/api/payment/methods?chain=solana
 ```
 
 ---
@@ -626,8 +656,8 @@ GET http://localhost:8000/api/payment/methods?chainId=8453
 - Logo and branding with improved visibility
 - Search bar with real-time filtering
 - Category navigation (8+ categories)
-- Wallet connection button (wallet + email login)
-- Market statistics display (Total Markets, Active Markets, Total Volume)
+- Multi-chain wallet connection (EVM via Thirdweb, Solana via Wallet Adapter)
+- Market statistics display (Total Markets, Total Volume)
 - Navigation menu (Watchlist, Alerts, History, FAQ)
 - Notification badge on Alerts icon
 - Help button with tour restart
@@ -653,14 +683,15 @@ GET http://localhost:8000/api/payment/methods?chainId=8453
 - Quick analyze button
 
 ### **AI Facilitator Modal**
-- Wallet connection prompt
-- Payment processing ($0.20 USDC)
+- Multi-chain wallet connection prompt (EVM or Solana)
+- Payment processing ($0.3 USDC) via EVM (Base Sepolia) or Solana
+- Automatic chain detection based on connected wallet
 - Premium analysis display with 11 detailed sections
 - Executive summary, market context, fundamental/technical analysis
 - Key factors, opportunity analysis, price analysis
 - Risk assessment, competitive analysis, action plan
-- Signal cards with recommendations
-- Full analysis history tracking
+- Signal cards with recommendations and chain badge (EVM/Solana)
+- Full analysis history tracking with chain information
 
 ### **Watchlist Page** (`/watchlist`)
 - Grid view of saved markets
@@ -678,12 +709,13 @@ GET http://localhost:8000/api/payment/methods?chainId=8453
 - Empty states for each tab
 
 ### **History Page** (`/history`)
-- Signal purchase history
+- Signal purchase history with chain tracking
 - Filter by recommendation type
 - Sort by date, confidence, price target
 - Signal statistics dashboard
-- Detailed signal cards
+- Detailed signal cards with chain badges (EVM/Solana)
 - Full analysis display
+- Total spent calculation (0.3 USDC per signal)
 
 ### **Help/FAQ Page** (`/help`)
 - Search functionality
@@ -791,7 +823,7 @@ vercel --prod
 # NEXT_PUBLIC_THIRDWEB_CLIENT_ID=your_client_id
 ```
 
-### **Backend Deployment (Railway/Render)**
+### **Backend Deployment (Vercel/Railway/Render)**
 
 ```bash
 # Deploy backend to Railway/Render
@@ -814,6 +846,9 @@ npm start
 **Frontend (Production):**
 - ✅ `NEXT_PUBLIC_API_URL` - Backend API URL
 - ✅ `NEXT_PUBLIC_THIRDWEB_CLIENT_ID` - Thirdweb client ID
+- ✅ `NEXT_PUBLIC_SERVER_WALLET` - EVM server wallet address
+- ✅ `NEXT_PUBLIC_SOLANA_SERVER_WALLET` - Solana server wallet address
+- ✅ `NEXT_PUBLIC_SOLANA_RPC_URL` - Solana RPC endpoint (Helius, QuickNode, etc.)
 
 **Backend (Production):**
 - ✅ `SUPABASE_URL` - Supabase project URL
@@ -821,8 +856,15 @@ npm start
 - ✅ `SUPABASE_SERVICE_ROLE_KEY` - Service role key (keep secret!)
 - ✅ `PORT` - Server port (default 8000)
 - ✅ `NODE_ENV=production` - Production mode
+- ✅ `FRONTEND_URL` - Frontend URL for CORS (e.g., https://your-frontend.vercel.app)
 - ✅ `RESEND_API_KEY` - Resend API key for email service
 - ✅ `EMAIL_FROM` - Verified sender email address
+- ✅ `OPENAI_API_KEY` - OpenAI API key for AI analysis
+- ✅ `BASE_RPC_URL` - Base Sepolia RPC endpoint
+- ✅ `USDC_CONTRACT_ADDRESS` - USDC contract on Base Sepolia
+- ✅ `SERVER_WALLET` - EVM server wallet address (Base Sepolia)
+- ✅ `SOLANA_SERVER_WALLET` - Solana server wallet address (optional)
+- ✅ `SOLANA_FACILITATOR_URL` - Solana X402 facilitator URL (optional)
 
 ### **Production Checklist**
 

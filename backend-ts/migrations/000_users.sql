@@ -43,3 +43,4 @@ COMMENT ON COLUMN public.users.total_signals_purchased IS 'Total number of AI si
 COMMENT ON COLUMN public.users.total_spent IS 'Total amount spent on signals';
 COMMENT ON COLUMN public.users.metadata IS 'Additional user metadata (JSON)';
 
+

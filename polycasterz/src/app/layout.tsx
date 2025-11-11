@@ -5,8 +5,10 @@ import { Providers } from "@/components/providers";
 import { ThirdwebProvider } from "thirdweb/react";
 import { ThemeProvider } from "@/components/theme-provider";
 import { AlertNotificationProvider } from "@/components/alert-notification-provider";
+import { SolanaWalletProvider } from "@/components/wallet/SolanaWalletProvider";
 // import { OnboardingProvider } from "@/components/onboarding/OnboardingProvider";
 import { Footer } from "@/components/layout/Footer";
+import { ScrollRestoration } from "@/components/ScrollRestoration";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -43,14 +45,17 @@ export default function RootLayout({
           disableTransitionOnChange
         >
             <ThirdwebProvider>
-              <Providers>
-                <AlertNotificationProvider>
-                  {/* <OnboardingProvider> */}
-                    {children}
-                    <Footer />
-                  {/* </OnboardingProvider> */}
-                </AlertNotificationProvider>
-              </Providers>
+              <SolanaWalletProvider>
+                <Providers>
+                  <AlertNotificationProvider>
+                    {/* <OnboardingProvider> */}
+                      <ScrollRestoration />
+                      {children}
+                      <Footer />
+                    {/* </OnboardingProvider> */}
+                  </AlertNotificationProvider>
+                </Providers>
+              </SolanaWalletProvider>
             </ThirdwebProvider>
           </ThemeProvider>
         </body>

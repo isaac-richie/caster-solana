@@ -33,6 +33,7 @@ export interface Signal {
   created_at: string
   user_wallet?: string
   market_category?: string
+  chain?: 'evm' | 'solana' // Blockchain used for payment
   // Premium $100 analysis fields
   executive_summary?: string
   market_context?: string
@@ -99,6 +100,7 @@ export interface AIAnalysisRequest {
   payment_verified: boolean
   user_wallet?: string
   transaction_hash?: string
+  chain?: 'evm' | 'solana' // Blockchain used for payment
 }
 
 export interface AIAnalysisResponse {

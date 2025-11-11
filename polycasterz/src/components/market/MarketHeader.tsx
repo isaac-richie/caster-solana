@@ -21,11 +21,11 @@ import {
   Award
 } from 'lucide-react'
 import Link from 'next/link'
-import { WalletConnectButton } from '@/components/wallet/WalletConnect'
+import { SolanaConnectButton } from '@/components/wallet/SolanaConnectButton'
 import { RobotLogo } from '@/components/ui/RobotLogo'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
 import { MARKET_CATEGORIES, SORT_OPTIONS } from '@/lib/constants'
-import { cn } from '@/lib/utils'
+import { cn, formatVolume } from '@/lib/utils'
 import { useAlertNotifications } from '@/hooks/useAlertNotifications'
 // import { useOnboarding } from '@/components/onboarding/OnboardingProvider'
 // import { HelpButton } from '@/components/onboarding/HelpButton'
@@ -50,7 +50,7 @@ interface MarketHeaderProps {
   onSortOrderChange: (order: 'asc' | 'desc') => void
   marketStats: {
     totalMarkets: number
-    activeMarkets: number
+    totalVolume: number
     trendingMarkets: number
   }
 }
@@ -161,21 +161,19 @@ export function MarketHeader({
         {/* Main Header */}
         <div className="flex items-center justify-between h-12 sm:h-14 md:h-16 gap-1.5 sm:gap-2">
           {/* Logo and Brand */}
-          <div className="flex items-center space-x-1.5 sm:space-x-2 md:space-x-4 flex-shrink-0 min-w-0">
-            <div className="flex items-center space-x-1.5 sm:space-x-2 md:space-x-3 min-w-0">
-              <div className="w-7 h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 polycaster-gradient rounded-lg flex items-center justify-center shadow-lg border-2 border-white/20 flex-shrink-0">
-                <RobotLogo size="md" animated={true} className="drop-shadow-lg" />
-              </div>
-              <div className="hidden xs:block min-w-0">
-                <h1 className="text-sm sm:text-base md:text-lg lg:text-xl font-bold text-white drop-shadow-md truncate">
-                  PolyCaster
-                </h1>
-                <p className="text-[10px] sm:text-xs text-blue-200 font-medium hidden md:block lg:block">
-                  AI-Powered Prediction Markets
-                </p>
-              </div>
+          <Link href="/" className="flex items-center space-x-1.5 sm:space-x-2 md:space-x-3 flex-shrink-0 min-w-0 hover:opacity-90 transition-opacity">
+            <div className="w-7 h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 polycaster-gradient rounded-lg flex items-center justify-center shadow-lg border-2 border-white/20 flex-shrink-0">
+              <RobotLogo size="md" animated={true} className="drop-shadow-lg" />
             </div>
-          </div>
+            <div className="min-w-0">
+              <h1 className="text-sm sm:text-base md:text-lg lg:text-xl font-bold text-white drop-shadow-md truncate">
+                PolyCaster
+              </h1>
+              <p className="text-[10px] sm:text-xs text-blue-200 font-medium hidden sm:block">
+                AI-Powered Prediction Markets
+              </p>
+            </div>
+          </Link>
 
           {/* Search Bar - Desktop */}
           <div className="hidden md:flex flex-1 max-w-md mx-4 lg:mx-8">
@@ -288,7 +286,7 @@ export function MarketHeader({
               <HelpButton onStartTour={onboardingContext.startTour} />
             )} */}
             <div className="hidden xl:block" data-onboarding="wallet">
-              <WalletConnectButton />
+              <SolanaConnectButton />
             </div>
           </div>
 
@@ -410,7 +408,7 @@ export function MarketHeader({
 
               <div className="pt-2 border-t border-white/10 px-2">
                 <div className="w-full">
-                  <WalletConnectButton />
+                  <SolanaConnectButton className="w-full" />
                 </div>
               </div>
             </div>
@@ -428,9 +426,9 @@ export function MarketHeader({
             </div>
             <div className="text-center px-1 sm:px-0">
               <div className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-white">
-                {marketStats.activeMarkets.toLocaleString()}
+                {formatVolume(marketStats.totalVolume)}
               </div>
-              <div className="text-[10px] sm:text-xs md:text-sm text-white/80 leading-tight">Active Markets</div>
+              <div className="text-[10px] sm:text-xs md:text-sm text-white/80 leading-tight">Total Volume</div>
             </div>
             <div className="text-center px-1 sm:px-0">
               <div className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-white">

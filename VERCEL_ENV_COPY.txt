@@ -57,3 +57,4 @@ NODE_ENV=production
 # 4. Update FRONTEND_URL in backend with frontend URL
 # 5. Redeploy backend
 
+

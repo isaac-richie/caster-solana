@@ -119,6 +119,16 @@
   body {
     @apply bg-background text-foreground;
   }
+  
+  /* Prevent scroll position issues during page load */
+  html {
+    scroll-behavior: auto; /* Use 'auto' instead of 'smooth' to prevent scroll jumps */
+  }
+  
+  /* Ensure page starts at top on load */
+  html, body {
+    scroll-padding-top: 0;
+  }
 }
 
 /* PolyCaster blue variant gradients and branding */
@@ -312,5 +322,51 @@
       min-height: 44px;
       min-width: 44px;
     }
+  }
+
+  /* Solana Wallet Adapter Button Overrides - Force White Styling */
+  .wallet-adapter-button {
+    background-color: white !important;
+    background: white !important;
+    color: #111827 !important;
+    border: 1px solid #e5e7eb !important;
+    font-weight: 500 !important;
+  }
+
+  .wallet-adapter-button:hover:not([disabled]) {
+    background-color: #f9fafb !important;
+    background: #f9fafb !important;
+    border-color: #d1d5db !important;
+  }
+
+  .wallet-adapter-button:not([disabled]):hover {
+    background-color: #f9fafb !important;
+    background: #f9fafb !important;
+  }
+
+  /* Override any gradient backgrounds */
+  .wallet-adapter-button[style*="background"] {
+    background: white !important;
+    background-color: white !important;
+  }
+
+  /* Change button text from "Select Wallet" to "Connect" */
+  .wallet-adapter-button span:not(.wallet-adapter-button-start-icon) {
+    position: relative;
+  }
+
+  /* Hide default text and show "Connect" */
+  .wallet-adapter-button:not([aria-expanded="true"]) span:not(.wallet-adapter-button-start-icon)::before {
+    content: "Connect";
+    position: absolute;
+    left: 0;
+  }
+
+  .wallet-adapter-button:not([aria-expanded="true"]) span:not(.wallet-adapter-button-start-icon) {
+    font-size: 0;
+  }
+
+  .wallet-adapter-button:not([aria-expanded="true"]) span:not(.wallet-adapter-button-start-icon)::before {
+    font-size: 0.875rem;
   }
 }

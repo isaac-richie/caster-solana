@@ -16,6 +16,7 @@ export interface Signal {
   created_at: string
   user_wallet?: string
   market_category?: string
+  chain?: 'evm' | 'solana' // Blockchain used for payment
 }
 
 export interface SignalsResponse {

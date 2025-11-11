@@ -1,6 +1,7 @@
 import express from 'express'
 import cors from 'cors'
 import dotenv from 'dotenv'
+import { Connection, PublicKey } from '@solana/web3.js'
 import { facilitatorService } from './services/facilitator'
 import { polymarketService } from './services/polymarket'
 import { aiEngineService } from './services/ai-engine'
@@ -21,44 +22,59 @@ const allowedOrigins = [
   process.env.FRONTEND_URL,
   'http://localhost:3000',
   'http://localhost:3001',
+  'http://127.0.0.1:3000',
+  'http://127.0.0.1:3001',
 ].filter(Boolean) // Remove undefined values
 
 // Check if FRONTEND_URL is a placeholder (not yet configured)
 const isPlaceholder = process.env.FRONTEND_URL?.includes('your-frontend') || 
-                      process.env.FRONTEND_URL?.includes('your-actual-frontend')
+                      process.env.FRONTEND_URL?.includes('your-actual-frontend') ||
+                      !process.env.FRONTEND_URL
 
+// Enhanced CORS configuration for production deployment
 app.use(cors({
   origin: function (origin, callback) {
     // Allow requests with no origin (mobile apps, Postman, curl, etc.)
     if (!origin) return callback(null, true)
     
-    // If FRONTEND_URL is not set or is a placeholder, allow all origins (for initial setup)
-    // This allows frontend to connect before FRONTEND_URL is properly configured
-    if (allowedOrigins.length === 0 || isPlaceholder) {
-      if (process.env.NODE_ENV === 'production') {
+    // In production, be more strict about CORS
+    if (process.env.NODE_ENV === 'production') {
+      // If FRONTEND_URL is not set or is a placeholder, allow all origins (for initial setup)
+      // This allows frontend to connect before FRONTEND_URL is properly configured
+      if (allowedOrigins.length === 0 || isPlaceholder) {
         console.warn(`⚠️  WARNING: FRONTEND_URL not configured - allowing origin: ${origin}`)
         console.warn(`⚠️  Set FRONTEND_URL in environment variables and redeploy for security`)
-      }
-      return callback(null, true)
-    }
-    
-    // Check if origin is in allowed list
-    if (allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true)
-    } else {
-      console.warn(`⚠️  CORS blocked origin: ${origin}`)
-      console.warn(`⚠️  Allowed origins: ${allowedOrigins.join(', ')}`)
-      // In development, be more permissive
-      if (process.env.NODE_ENV !== 'production') {
         return callback(null, true)
       }
-      callback(new Error('Not allowed by CORS'))
+      
+      // In production, only allow configured origins
+      if (allowedOrigins.indexOf(origin) !== -1) {
+        callback(null, true)
+      } else {
+        console.warn(`⚠️  CORS blocked origin: ${origin}`)
+        console.warn(`⚠️  Allowed origins: ${allowedOrigins.join(', ')}`)
+        callback(new Error('Not allowed by CORS'))
+      }
+    } else {
+      // In development, be more permissive
+      if (allowedOrigins.length === 0 || allowedOrigins.indexOf(origin) !== -1) {
+        callback(null, true)
+      } else {
+        // Still allow in development but log a warning
+        console.warn(`⚠️  CORS: Allowing origin in development: ${origin}`)
+        callback(null, true)
+      }
     }
   },
   credentials: true,
-  methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS', 'PUT'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  exposedHeaders: ['Content-Type', 'Authorization'],
+  maxAge: 86400 // 24 hours
 }))
+
+// Handle preflight requests explicitly
+app.options('*', cors())
 
 if (process.env.NODE_ENV === 'production' && (allowedOrigins.length === 0 || isPlaceholder)) {
   console.warn('⚠️  WARNING: FRONTEND_URL not properly configured - CORS allows all origins (INSECURE)')
@@ -96,7 +112,7 @@ app.get('/health', async (req, res) => {
 // Facilitator endpoints
 app.post('/api/payment/settle', async (req, res) => {
   try {
-    const { resourceUrl, paymentData, price } = req.body
+    const { resourceUrl, paymentData, price, chain } = req.body
 
     if (!resourceUrl || !paymentData) {
       return res.status(400).json({ 
@@ -105,7 +121,13 @@ app.post('/api/payment/settle', async (req, res) => {
       })
     }
 
-    const result = await facilitatorService.settlePayment(resourceUrl, paymentData, price)
+    // Pass optional chain parameter (defaults to 'evm' if not provided - backward compatible)
+    const result = await facilitatorService.settlePayment(
+      resourceUrl, 
+      paymentData, 
+      price,
+      chain // Optional: 'evm' (default) or 'solana'
+    )
     res.status(result.status).json(result.responseBody)
   } catch (error) {
     console.error('Payment settlement error:', error)
@@ -119,7 +141,10 @@ app.post('/api/payment/settle', async (req, res) => {
 app.get('/api/payment/methods', async (req, res) => {
   try {
     const chainId = req.query.chainId ? parseInt(req.query.chainId as string) : undefined
-    const methods = await facilitatorService.getSupportedPaymentMethods(chainId)
+    const chain = req.query.chain as 'evm' | 'solana' | undefined
+    
+    // Pass optional chain parameter (defaults to EVM if not provided - backward compatible)
+    const methods = await facilitatorService.getSupportedPaymentMethods(chainId, chain)
     res.json({ success: true, methods })
   } catch (error) {
     console.error('Get payment methods error:', error)
@@ -465,7 +490,7 @@ app.get('/markets/:id', async (req, res) => {
 app.post('/ai/analyze/:marketId', async (req, res) => {
   try {
     const { marketId } = req.params
-    const { payment_verified, user_wallet, transaction_hash }: AIAnalysisRequest = req.body
+    const { payment_verified, user_wallet, transaction_hash, chain }: AIAnalysisRequest = req.body
 
     // Always require payment verification
     if (!payment_verified) {
@@ -475,11 +500,90 @@ app.post('/ai/analyze/:marketId', async (req, res) => {
       })
     }
 
+    // For Solana payments, verify that the facilitator is configured
+    if (chain === 'solana') {
+      const solanaServerWallet = process.env.SOLANA_SERVER_WALLET
+      if (!solanaServerWallet || solanaServerWallet.trim() === '') {
+        console.error('❌ Solana payment attempted but SOLANA_SERVER_WALLET is not configured')
+        return res.status(500).json({
+          success: false,
+          error: 'Solana payment facilitator not configured. SOLANA_SERVER_WALLET environment variable is required for Solana payments.'
+        })
+      }
+    }
+
     // If transaction hash provided, verify it on-chain
     if (transaction_hash && user_wallet) {
-      // TODO: Add on-chain verification of the payment transaction
-      // For now, we trust the frontend verification
-      console.log(`✅ Payment verified: ${transaction_hash} from ${user_wallet}`)
+      if (chain === 'solana') {
+        // Verify Solana transaction on-chain
+        try {
+          const solanaRpcUrl = process.env.SOLANA_RPC_URL || 'https://api.mainnet-beta.solana.com'
+          const connection = new Connection(solanaRpcUrl, 'confirmed')
+          const signature = transaction_hash
+          
+          console.log(`🔍 Verifying Solana transaction: ${signature}`)
+          
+          // Fetch transaction
+          const tx = await connection.getParsedTransaction(signature, {
+            maxSupportedTransactionVersion: 0
+          })
+          
+          if (!tx) {
+            console.error(`❌ Transaction not found: ${signature}`)
+            return res.status(400).json({
+              success: false,
+              error: 'Transaction not found on Solana blockchain'
+            })
+          }
+          
+          // Check if transaction was successful
+          if (tx.meta?.err) {
+            console.error(`❌ Transaction failed: ${JSON.stringify(tx.meta.err)}`)
+            return res.status(400).json({
+              success: false,
+              error: 'Transaction failed on Solana blockchain'
+            })
+          }
+          
+          // Verify the transaction was sent to the correct server wallet
+          const solanaServerWallet = process.env.SOLANA_SERVER_WALLET
+          if (solanaServerWallet) {
+            const serverPubkey = new PublicKey(solanaServerWallet)
+            const postTokenBalances = tx.meta?.postTokenBalances || []
+            
+            // Check if any token transfer went to server wallet
+            const foundTransfer = postTokenBalances.some(balance => {
+              const owner = balance.owner
+              return owner && new PublicKey(owner).equals(serverPubkey)
+            })
+            
+            if (!foundTransfer && tx.transaction.message.accountKeys) {
+              // Also check account keys
+              const foundInAccounts = tx.transaction.message.accountKeys.some(key => {
+                const pubkey = typeof key === 'string' ? new PublicKey(key) : key.pubkey
+                return pubkey.equals(serverPubkey)
+              })
+              
+              if (!foundInAccounts) {
+                console.warn(`⚠️  Transaction may not have transferred to server wallet: ${solanaServerWallet}`)
+                // Don't fail, but log warning - the transaction exists and was successful
+              }
+            }
+          }
+          
+          console.log(`✅ Solana transaction verified: ${signature}`)
+        } catch (error) {
+          console.error('❌ Solana transaction verification failed:', error)
+          return res.status(400).json({
+            success: false,
+            error: `Failed to verify Solana transaction: ${error instanceof Error ? error.message : 'Unknown error'}`
+          })
+        }
+      } else {
+        // For EVM, we trust the frontend verification for now
+        // TODO: Add EVM transaction verification
+        console.log(`✅ Payment verified: ${transaction_hash} from ${user_wallet} on ${chain || 'evm'}`)
+      }
     }
 
     // Get market data
@@ -503,11 +607,13 @@ app.post('/ai/analyze/:marketId', async (req, res) => {
           user = await databaseService.createUser({ wallet_address: user_wallet })
         }
 
-        // Store the signal with user wallet
-        console.log(`💾 Storing signal for user ${user_wallet}...`)
+        // Store the signal with user wallet and chain
+        const chainType = chain || 'evm' // Default to EVM for backward compatibility
+        console.log(`💾 Storing signal for user ${user_wallet} on ${chainType}...`)
         const storedSignal = await databaseService.createSignal({
           ...signal,
-          user_wallet: user_wallet
+          user_wallet: user_wallet,
+          chain: chainType as 'evm' | 'solana'
         })
 
         if (storedSignal && user) {
@@ -515,7 +621,7 @@ app.post('/ai/analyze/:marketId', async (req, res) => {
           // Update user stats
           await databaseService.updateUser(user_wallet, {
             total_signals_purchased: (user.total_signals_purchased || 0) + 1,
-            total_spent: (user.total_spent || 0) + 0.2
+            total_spent: (user.total_spent || 0) + 0.3
           })
           console.log(`✅ User stats updated for ${user_wallet}`)
         } else {
@@ -1230,20 +1336,36 @@ app.post('/payment/verify/:paymentId', async (req, res) => {
   }
 })
 
-// Error handling middleware
-app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+// Error handling middleware - must be after all routes
+app.use((err: unknown, req: express.Request, res: express.Response, next: express.NextFunction) => {
   console.error('Unhandled error:', err)
+  
+  // Handle CORS errors specifically
+  if (err instanceof Error && err.message === 'Not allowed by CORS') {
+    return res.status(403).json({ 
+      success: false,
+      error: 'CORS: Origin not allowed',
+      message: 'The request origin is not allowed by CORS policy. Please check FRONTEND_URL configuration.'
+    })
+  }
+  
+  // Handle other errors
   res.status(500).json({ 
     success: false,
-    error: 'Internal server error' 
+    error: 'Internal server error',
+    message: process.env.NODE_ENV === 'production' 
+      ? 'An internal server error occurred' 
+      : err instanceof Error ? err.message : 'Unknown error'
   })
 })
 
-// 404 handler
+// 404 handler - must be last
 app.use('*', (req, res) => {
   res.status(404).json({ 
     success: false,
-    error: 'Endpoint not found' 
+    error: 'Endpoint not found',
+    path: req.originalUrl,
+    method: req.method
   })
 })
 

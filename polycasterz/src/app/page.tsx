@@ -15,7 +15,8 @@ import {
   CircleDot, 
   Target,
   Loader2,
-  RefreshCw
+  RefreshCw,
+  ChevronDown
 } from 'lucide-react'
 import { normalizeCategory } from '@/lib/categories'
 
@@ -24,7 +25,12 @@ const LANDING_SKIPPED_KEY = 'polycaster_landing_skipped'
 export default function Home() {
   const [searchTerm, setSearchTerm] = useState('')
   const [markets, setMarkets] = useState<Market[]>([])
-  const [recentMarkets, setRecentMarkets] = useState<Market[]>([])
+  const [trendingMarkets, setTrendingMarkets] = useState<Market[]>([])
+  const [trendingMarketsToShow, setTrendingMarketsToShow] = useState(6) // Initially show 6 (2 rows on desktop)
+  const [liveMarkets, setLiveMarkets] = useState<Market[]>([]) // Real live markets from API
+  const [liveMarketsToShow, setLiveMarketsToShow] = useState(8) // Initially show 8 (2 rows with 4 columns on desktop)
+  const [allMarketsToShow, setAllMarketsToShow] = useState(9) // Initially show 9 (3 rows with 3 columns on desktop)
+  const [categoryMarketsToShow, setCategoryMarketsToShow] = useState(9) // Initially show 9 for category-specific markets
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [selectedMarket, setSelectedMarket] = useState<Market | null>(null)
@@ -33,6 +39,26 @@ export default function Home() {
   const [showLanding, setShowLanding] = useState(false)
 
   const { filters, updateFilter } = useMarketFilters()
+
+  // Ensure page starts at top on mount and when loading
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      // Scroll to top immediately on mount
+      window.scrollTo(0, 0)
+      // Also set scroll position to top
+      document.documentElement.scrollTop = 0
+      document.body.scrollTop = 0
+    }
+  }, [])
+
+  // Scroll to top when loading starts
+  useEffect(() => {
+    if (loading && typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'instant' })
+      document.documentElement.scrollTop = 0
+      document.body.scrollTop = 0
+    }
+  }, [loading])
 
   // Check if landing should be shown (first-time visitors)
   useEffect(() => {
@@ -85,28 +111,6 @@ export default function Home() {
         console.log(`Fetching markets from: ${url}`)
       }
       
-      // Also fetch recent markets separately for "Live Markets" section
-      if (!searchTerm || searchTerm.trim().length === 0) {
-        const recentUrl = `${API_URL}/markets/recent?limit=24`
-        try {
-          const recentResponse = await fetch(recentUrl, {
-            method: 'GET',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-          })
-          if (recentResponse.ok) {
-            const recentData = await recentResponse.json()
-            setRecentMarkets(recentData.markets || [])
-            console.log(`Fetched ${recentData.markets?.length || 0} recent markets`)
-          }
-        } catch (err) {
-          console.warn('Failed to fetch recent markets:', err)
-        }
-      } else {
-        // Clear recent markets when searching
-        setRecentMarkets([])
-      }
 
       const response = await fetch(url, {
         method: 'GET',
@@ -146,8 +150,77 @@ export default function Home() {
       setMarkets([])
     } finally {
       setLoading(false)
+      // Ensure page stays at top after loading completes
+      if (typeof window !== 'undefined') {
+        // Use requestAnimationFrame to ensure DOM has updated
+        requestAnimationFrame(() => {
+          window.scrollTo({ top: 0, behavior: 'instant' })
+          document.documentElement.scrollTop = 0
+          document.body.scrollTop = 0
+        })
+      }
     }
   }
+
+  // Fetch trending markets on mount and when filters change (if not searching)
+  useEffect(() => {
+    if (!searchTerm || searchTerm.trim().length === 0) {
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+      const trendingUrl = `${API_URL}/markets/trending?limit=20`
+      
+      fetch(trendingUrl, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && data.markets) {
+            setTrendingMarkets(data.markets)
+            setTrendingMarketsToShow(6) // Reset to initial 6 markets when new data is fetched
+            console.log(`Fetched ${data.markets.length} trending markets`)
+          }
+        })
+        .catch(err => {
+          console.warn('Failed to fetch trending markets:', err)
+        })
+    } else {
+      // Clear trending markets when searching
+      setTrendingMarkets([])
+      setTrendingMarketsToShow(6) // Reset count
+    }
+  }, [searchTerm, filters.category]) // Refetch when search or category changes
+
+  // Fetch live markets on mount and when filters change (if not searching)
+  useEffect(() => {
+    if (!searchTerm || searchTerm.trim().length === 0) {
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+      const activeUrl = `${API_URL}/markets/active?limit=40`
+      
+      fetch(activeUrl, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && data.markets) {
+            setLiveMarkets(data.markets)
+            setLiveMarketsToShow(8) // Reset to initial 8 markets (2 rows with 4 columns) when new data is fetched
+            console.log(`Fetched ${data.markets.length} live markets`)
+          }
+        })
+        .catch(err => {
+          console.warn('Failed to fetch live markets:', err)
+        })
+    } else {
+      // Clear live markets when searching
+      setLiveMarkets([])
+      setLiveMarketsToShow(8) // Reset count
+    }
+  }, [searchTerm, filters.category]) // Refetch when search or category changes
 
   // Fetch markets data (only when search/category changes, not on every mount)
   useEffect(() => {
@@ -159,6 +232,12 @@ export default function Home() {
     return () => clearTimeout(timeoutId)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters.category, searchTerm]) // Only refetch when search or category changes
+
+  // Reset "All Markets" count when markets or filters change
+  useEffect(() => {
+    setAllMarketsToShow(9) // Reset to initial 9 markets when markets change
+    setCategoryMarketsToShow(9) // Reset category markets count as well
+  }, [markets.length, filters.category, searchTerm])
 
   // Apply client-side filtering for status, price range, and volume range
   const filteredMarkets = markets.filter(market => {
@@ -180,14 +259,27 @@ export default function Home() {
     return true
   })
 
-  // Get trending markets (highest volume)
-  const trendingMarkets = [...filteredMarkets]
-    .sort((a, b) => b.volume - a.volume)
-    .slice(0, 6)
+  // Use fetched trending markets (real markets from API, sorted by volume)
+  // If no trending markets fetched (e.g., during search), fallback to filtered markets sorted by volume
+  const allTrendingMarkets = trendingMarkets.length > 0
+    ? trendingMarkets
+    : [...filteredMarkets]
+        .sort((a, b) => b.volume - a.volume)
+        .slice(0, 20)
+  
+  // Display only the markets to show (initially 6, then more when "Load More" is clicked)
+  const displayTrendingMarkets = allTrendingMarkets.slice(0, trendingMarketsToShow)
+  const hasMoreTrendingMarkets = allTrendingMarkets.length > trendingMarketsToShow
 
-  // Get live markets - use recent markets if available, otherwise filter from all markets
-  const liveMarkets = recentMarkets.length > 0 
-    ? recentMarkets.slice(0, 24)
+  const handleLoadMoreTrending = () => {
+    // Load 6 more markets at a time (2 more rows on desktop)
+    setTrendingMarketsToShow(prev => Math.min(prev + 6, allTrendingMarkets.length))
+  }
+
+  // Use fetched live markets (real markets from API)
+  // If no live markets fetched (e.g., during search), fallback to filtered markets
+  const allLiveMarkets = liveMarkets.length > 0
+    ? liveMarkets
     : filteredMarkets
         .filter(market => market.active && !market.closed)
         .sort((a, b) => {
@@ -195,13 +287,45 @@ export default function Home() {
           const dateB = new Date(b.updated_at || b.created_at || 0).getTime()
           return dateB - dateA
         })
-        .slice(0, 24)
+        .slice(0, 40)
+  
+  // Display only the markets to show (initially 8, then more when "Load More" is clicked)
+  const displayLiveMarkets = allLiveMarkets.slice(0, liveMarketsToShow)
+  const hasMoreLiveMarkets = allLiveMarkets.length > liveMarketsToShow
+
+  const handleLoadMoreLive = () => {
+    // Load 8 more markets at a time (2 more rows with 4 columns on desktop)
+    setLiveMarketsToShow(prev => Math.min(prev + 8, allLiveMarkets.length))
+  }
+
+  // Display only the markets to show for "All Markets" section (initially 9, then more when "Load More" is clicked)
+  const displayAllMarkets = filteredMarkets.slice(0, allMarketsToShow)
+  const hasMoreAllMarkets = filteredMarkets.length > allMarketsToShow
+
+  const handleLoadMoreAll = () => {
+    // Load 9 more markets at a time (3 more rows with 3 columns on desktop)
+    setAllMarketsToShow(prev => Math.min(prev + 9, filteredMarkets.length))
+  }
+
+  // Display only the markets to show for category-specific "Live Markets" section
+  const displayCategoryMarkets = filteredMarkets.slice(0, categoryMarketsToShow)
+  const hasMoreCategoryMarkets = filteredMarkets.length > categoryMarketsToShow
+
+  const handleLoadMoreCategory = () => {
+    // Load 9 more markets at a time (3 more rows with 3 columns on desktop)
+    setCategoryMarketsToShow(prev => Math.min(prev + 9, filteredMarkets.length))
+  }
 
   // Calculate market stats
+  // Calculate total volume from filtered markets (markets being displayed)
+  const totalVolume = filteredMarkets.reduce((sum, market) => {
+    return sum + (market.volume || 0)
+  }, 0)
+
   const marketStats = {
-    totalMarkets: markets.length,
-    activeMarkets: markets.filter(market => market.active).length,
-    trendingMarkets: trendingMarkets.length
+    totalMarkets: filteredMarkets.length, // Use filtered markets count
+    totalVolume: totalVolume,
+    trendingMarkets: displayTrendingMarkets.length
   }
 
   const handleAnalyze = async (marketId: string) => {
@@ -219,7 +343,17 @@ export default function Home() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+      <div 
+        className="fixed inset-0 bg-gray-50 dark:bg-gray-900 flex items-center justify-center z-50"
+        style={{ 
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          overflow: 'hidden'
+        }}
+      >
         <div className="text-center">
           <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-blue-600" />
           <p className="text-gray-600 dark:text-gray-400">Loading markets...</p>
@@ -300,7 +434,7 @@ export default function Home() {
             </div>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-              {trendingMarkets.map((market) => (
+              {displayTrendingMarkets.map((market) => (
                 <MarketCard
                   key={market.id}
                   market={market}
@@ -309,6 +443,22 @@ export default function Home() {
                 />
               ))}
             </div>
+
+            {/* Load More Button */}
+            {hasMoreTrendingMarkets && (
+              <div className="flex justify-center mt-6 sm:mt-8">
+                <Button
+                  onClick={handleLoadMoreTrending}
+                  variant="outline"
+                  className="group relative overflow-hidden px-6 py-2.5 sm:px-8 sm:py-3 bg-white dark:bg-gray-800/50 border border-blue-300/50 dark:border-blue-600/30 text-gray-700 dark:text-gray-300 font-medium text-sm sm:text-base rounded-lg shadow-sm hover:shadow-md transition-all duration-300 hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50/50 dark:hover:bg-blue-900/10"
+                >
+                  <span className="relative z-10 flex items-center gap-2">
+                    <span>Load More Markets</span>
+                    <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500 dark:text-blue-400 group-hover:translate-y-1 transition-transform duration-300" />
+                  </span>
+                </Button>
+              </div>
+            )}
           </motion.section>
         )}
 
@@ -325,12 +475,12 @@ export default function Home() {
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Live Markets</h2>
               <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700"></div>
               <span className="text-sm text-gray-500 dark:text-gray-400">
-                {liveMarkets.length} live
+                {allLiveMarkets.length} live
               </span>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {liveMarkets.map((market) => (
+              {displayLiveMarkets.map((market) => (
                 <MarketCard
                   key={market.id}
                   market={market}
@@ -339,6 +489,22 @@ export default function Home() {
                 />
               ))}
             </div>
+
+            {/* Load More Button */}
+            {hasMoreLiveMarkets && (
+              <div className="flex justify-center mt-6 sm:mt-8">
+                <Button
+                  onClick={handleLoadMoreLive}
+                  variant="outline"
+                  className="group relative overflow-hidden px-6 py-2.5 sm:px-8 sm:py-3 bg-white dark:bg-gray-800/50 border border-blue-300/50 dark:border-blue-600/30 text-gray-700 dark:text-gray-300 font-medium text-sm sm:text-base rounded-lg shadow-sm hover:shadow-md transition-all duration-300 hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50/50 dark:hover:bg-blue-900/10"
+                >
+                  <span className="relative z-10 flex items-center gap-2">
+                    <span>Load More Markets</span>
+                    <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500 dark:text-blue-400 group-hover:translate-y-1 transition-transform duration-300" />
+                  </span>
+                </Button>
+              </div>
+            )}
           </motion.section>
         )}
 
@@ -373,16 +539,34 @@ export default function Home() {
                 </p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {filteredMarkets.map((market) => (
-                  <MarketCard
-                    key={market.id}
-                    market={market}
-                    compact={false}
-                    onAnalyze={handleAnalyze}
-                  />
-                ))}
-              </div>
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {displayCategoryMarkets.map((market) => (
+                    <MarketCard
+                      key={market.id}
+                      market={market}
+                      compact={false}
+                      onAnalyze={handleAnalyze}
+                    />
+                  ))}
+                </div>
+
+                {/* Load More Button */}
+                {hasMoreCategoryMarkets && (
+                  <div className="flex justify-center mt-6 sm:mt-8">
+                    <Button
+                      onClick={handleLoadMoreCategory}
+                      variant="outline"
+                      className="group relative overflow-hidden px-6 py-2.5 sm:px-8 sm:py-3 bg-white dark:bg-gray-800/50 border border-blue-300/50 dark:border-blue-600/30 text-gray-700 dark:text-gray-300 font-medium text-sm sm:text-base rounded-lg shadow-sm hover:shadow-md transition-all duration-300 hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50/50 dark:hover:bg-blue-900/10"
+                    >
+                      <span className="relative z-10 flex items-center gap-2">
+                        <span>Load More Markets</span>
+                        <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500 dark:text-blue-400 group-hover:translate-y-1 transition-transform duration-300" />
+                      </span>
+                    </Button>
+                  </div>
+                )}
+              </>
             )}
           </motion.section>
         )}
@@ -416,19 +600,38 @@ export default function Home() {
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredMarkets.map((market) => (
-                <MarketCard
-                  key={market.id}
-                  market={market}
-                  compact={false}
-                  onAnalyze={handleAnalyze}
-                />
-              ))}
-            </div>
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {displayAllMarkets.map((market) => (
+                  <MarketCard
+                    key={market.id}
+                    market={market}
+                    compact={false}
+                    onAnalyze={handleAnalyze}
+                  />
+                ))}
+              </div>
+
+              {/* Load More Button */}
+              {hasMoreAllMarkets && (
+                <div className="flex justify-center mt-6 sm:mt-8">
+                  <Button
+                    onClick={handleLoadMoreAll}
+                    variant="outline"
+                    className="group relative overflow-hidden px-6 py-2.5 sm:px-8 sm:py-3 bg-white dark:bg-gray-800/50 border border-blue-300/50 dark:border-blue-600/30 text-gray-700 dark:text-gray-300 font-medium text-sm sm:text-base rounded-lg shadow-sm hover:shadow-md transition-all duration-300 hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50/50 dark:hover:bg-blue-900/10"
+                  >
+                    <span className="relative z-10 flex items-center gap-2">
+                      <span>Load More Markets</span>
+                      <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500 dark:text-blue-400 group-hover:translate-y-1 transition-transform duration-300" />
+                    </span>
+                  </Button>
+                </div>
+              )}
+            </>
           )}
           </motion.section>
         )}
+
       </div>
 
       {/* AI Analysis Modal */}
