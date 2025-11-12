@@ -20,10 +20,10 @@ export class AIEngineService {
       console.log('✅ OpenAI client initialized')
     }
     
-    // Default to gpt-4o-mini - best balance of cost and quality
+    // Default to gpt-4o - best quality and accuracy
     // gpt-5-nano exists but has limitations (empty responses, no json_object support)
-    // For cheapest: use gpt-3.5-turbo, for best quality: use gpt-4o
-    this.model = process.env.OPENAI_MODEL || 'gpt-4o-mini'
+    // For cheapest: use gpt-4o-mini or gpt-3.5-turbo, for best quality: use gpt-4o
+    this.model = process.env.OPENAI_MODEL || 'gpt-4o'
   }
 
   async generateSignal(market: Market, userWallet?: string): Promise<Signal> {
